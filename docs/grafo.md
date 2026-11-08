@@ -15,19 +15,16 @@ graph TD;
 	checar_elegibilidade(checar_elegibilidade)
 	regras_fixas(regras_fixas)
 	decidir(decidir)
-	auditar(auditar)
 	agir(agir)
 	escalar_humano(escalar_humano)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> anonimizar;
 	anonimizar --> classificar;
-	auditar -.-> agir;
-	auditar -.-> decidir;
-	auditar -.-> escalar_humano;
 	checar_elegibilidade --> regras_fixas;
 	classificar -.-> __end__;
 	classificar -.-> enriquecer;
-	decidir --> auditar;
+	decidir -.-> agir;
+	decidir -.-> escalar_humano;
 	enriquecer --> priorizar;
 	priorizar --> checar_elegibilidade;
 	regras_fixas -.-> decidir;
