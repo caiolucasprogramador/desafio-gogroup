@@ -19,3 +19,12 @@ def test_rascunho_tem_um_paragrafo_por_motivo():
     texto = redigir(d, "Ápice")
     assert "transportadora" in texto and "estorno" in texto and "5 dias úteis" in texto
     assert texto.count("\n\n") == 3 and texto.endswith("Equipe Ápice")
+
+
+def test_motivos_com_mesma_acao_nao_repetem_paragrafo():
+    chamado = dict(tipo="abrir_chamado_transportadora", modo="automatico",
+                   parametros={"status": "atrasado"}, justificativa="")
+    acoes = [AcaoPlanejada(motivo="atraso", **chamado), AcaoPlanejada(motivo="rastreio_status", **chamado)]
+    d = Decisao(modo="automatico", acao_proposta="abrir_chamado_transportadora", justificativa="",
+                origem="regra", acoes=acoes)
+    assert redigir(d, "Gocase").count("chamado prioritário") == 1

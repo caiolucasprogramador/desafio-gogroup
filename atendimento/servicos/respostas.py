@@ -98,5 +98,6 @@ TEMPLATES = {
 
 def redigir(decisao: Decisao, marca: str) -> str:
     """Resposta completa: saudação + um parágrafo por ação + assinatura."""
-    paragrafos = [TEMPLATES[a.tipo](a) for a in decisao.acoes]  # KeyError = tipo sem template (teste cobre)
+    # dict.fromkeys: dois motivos com a mesma ação (ex.: atraso + rastreio → chamado) geram um parágrafo só
+    paragrafos = list(dict.fromkeys(TEMPLATES[a.tipo](a) for a in decisao.acoes))  # KeyError = tipo sem template
     return "\n\n".join(["Olá! Obrigado por falar com a gente.", *paragrafos, f"Equipe {marca or 'Gocase'}"])
