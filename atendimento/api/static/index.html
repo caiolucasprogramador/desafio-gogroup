@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente de Atendimento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f4f8; --surface: #ffffff; --surface-2: #f0edf4; --line: #e2dde9;
+  --fg: #1d1823; --muted: #6b6475; --faint: #9a93a5;
+  --accent: #6d3fc0; --accent-soft: #ece4fa; --accent-fg: #ffffff;
+  --auto: #1f7a55; --auto-soft: #def3e9;
+  --human: #b4561b; --human-soft: #fbe9dc;
+  --warn: #8a6a00; --warn-soft: #f8f0cf;
+  --bad: #b3263a; --bad-soft: #fbe2e6;
+  --f1: #6d3fc0; --f2: #2f7fb5; --f3: #1f9a8a; --f4: #c9821b; --f5: #b84a7a; --f6: #7d8590;
+  --shadow: 0 1px 2px rgba(40, 20, 70, .06), 0 4px 16px rgba(40, 20, 70, .05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
+    --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
+    --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+    --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+    --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+    --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+    --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
+  --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
+  --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+  --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+  --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+  --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+  --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.55 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 22px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
+h1 { font-size: 1.65rem; font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0; }
+.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; }
+.muted { color: var(--muted); }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+header .sub { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+       background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 600; }
+
+/* trilha do grafo */
+.grafo { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+         box-shadow: var(--shadow); }
+.nos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px; }
+.fork { display: grid; gap: 4px; }
+.no { display: flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 9px; font-size: .8rem;
+      font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--faint);
+      border: 1px dashed var(--line); background: transparent; transition: all .25s ease; }
+.no .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.no.on { color: var(--fg); border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+.no.on .pt { background: var(--accent); }
+.no.fim-auto { border-color: var(--auto); background: var(--auto-soft); color: var(--auto); }
+.no.fim-auto .pt { background: var(--auto); }
+.no.fim-hum { border-color: var(--human); background: var(--human-soft); color: var(--human); }
+.no.fim-hum .pt { background: var(--human); }
+.seta { color: var(--faint); font-size: .8rem; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+        box-shadow: var(--shadow); display: grid; gap: 14px; min-width: 0; align-content: start; }
+
+/* formulário */
+form { display: grid; gap: 18px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 999px;
+        padding: 5px 11px; font: inherit; font-size: .8rem; cursor: pointer; text-align: left; }
+.chip:hover { border-color: var(--accent); }
+.chip.ativo { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.chip small { display: block; font-size: .7rem; opacity: .75; }
+label { display: grid; gap: 5px; font-size: .82rem; font-weight: 500; color: var(--muted); min-width: 0; }
+textarea, input, select {
+  font: inherit; font-size: .92rem; color: var(--fg); background: var(--bg); width: 100%;
+  border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; min-width: 0;
+}
+textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+fieldset { border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px 14px; margin: 0;
+           display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+legend { padding: 0 6px; font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+fieldset .dica { grid-column: 1 / -1; font-size: .78rem; color: var(--faint); }
+.check { display: flex; gap: 9px; align-items: start; font-size: .85rem; color: var(--fg); font-weight: 400; }
+.check input { width: auto; margin-top: 3px; accent-color: var(--accent); }
+.check span small { display: block; color: var(--muted); }
+button.principal { font: inherit; font-weight: 600; font-size: .95rem; border: 0; border-radius: 10px; padding: 12px;
+                   background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+button.principal:disabled { opacity: .55; cursor: wait; }
+
+/* resultado */
+#resultado { display: grid; gap: 16px; min-width: 0; }
+.vazio { color: var(--muted); display: grid; gap: 12px; }
+.vazio ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.vazio b { color: var(--fg); }
+.erro { background: var(--bad-soft); color: var(--bad); border-radius: 11px; padding: 12px 14px; }
+
+.veredito { border-radius: 14px; padding: 18px 20px; display: grid; gap: 6px; border: 1px solid; }
+.veredito.auto { background: var(--auto-soft); border-color: var(--auto); }
+.veredito.hum { background: var(--human-soft); border-color: var(--human); }
+.veredito.neutro { background: var(--surface-2); border-color: var(--line); }
+.veredito .rot { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.veredito.auto .rot { color: var(--auto); } .veredito.hum .rot { color: var(--human); }
+.veredito .tit { font-size: 1.3rem; font-weight: 700; }
+.veredito .just { color: var(--muted); font-size: .9rem; }
+
+.dupla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 640px) { .dupla { grid-template-columns: minmax(0, 1fr); } }
+
+.kv { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .86rem; }
+.kv span b { font-weight: 600; }
+.motivo { border-left: 3px solid var(--line); padding: 2px 0 2px 11px; display: grid; gap: 3px; }
+.motivo.principal { border-left-color: var(--accent); }
+.motivo .nome { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .84rem; font-weight: 500; }
+.motivo .ev { color: var(--muted); font-size: .86rem; font-style: italic; }
+.pill { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+        letter-spacing: .02em; vertical-align: 1px; margin-left: 6px; font-style: normal; font-family: "Instrument Sans", system-ui, sans-serif; }
+.pill.acc { background: var(--accent-soft); color: var(--accent); }
+.pill.ok { background: var(--auto-soft); color: var(--auto); }
+.pill.no { background: var(--bad-soft); color: var(--bad); }
+.pill.ind { background: var(--warn-soft); color: var(--warn); }
+.pill.sp { background: var(--surface-2); color: var(--muted); }
+.pill.hum { background: var(--human-soft); color: var(--human); }
+
+.score { display: flex; align-items: baseline; gap: 8px; }
+.score .n { font-size: 2.3rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-2); gap: 2px; }
+.barra div { height: 100%; }
+.fatores { display: grid; gap: 5px; font-size: .82rem; }
+.fator { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; }
+.fator i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.fator .v { font-variant-numeric: tabular-nums; color: var(--muted); }
+.fator .c { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3.2em; text-align: right; }
+
+.eleg { display: grid; gap: 10px; }
+.eleg .item { display: grid; gap: 3px; font-size: .88rem; }
+.eleg ul { margin: 2px 0 0; padding-left: 18px; color: var(--muted); font-size: .84rem; }
+
+.bolha { background: var(--surface-2); border-radius: 4px 14px 14px 14px; padding: 14px 16px; white-space: pre-wrap;
+         font-size: .93rem; max-width: 62ch; }
+.dossie { display: grid; gap: 10px; font-size: .88rem; }
+.dossie .linha { display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; }
+@media (max-width: 520px) { .dossie .linha { grid-template-columns: 1fr; gap: 2px; } }
+.dossie .linha > span:first-child { color: var(--muted); }
+.acoes { display: grid; gap: 6px; }
+.acoes div { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+
+/* passo a passo do grafo (linha do tempo horizontal) */
+#trilha { min-width: 0; }
+.trilha-topo { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.rolar { display: flex; gap: 6px; }
+.rolar button { font: inherit; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+                background: var(--surface-2); color: var(--fg); cursor: pointer; font-size: 1rem; }
+.rolar button:hover { border-color: var(--accent); }
+.passos { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scroll-behavior: smooth;
+          padding: 4px 2px 12px; overscroll-behavior-x: contain; }
+.passo, .bifurca { flex: none; display: flex; flex-direction: column; scroll-snap-align: start; }
+.passo { width: 236px; animation: surgir .35s ease both; animation-delay: calc(var(--i) * 70ms); }
+.bifurca { width: 178px; }
+@keyframes surgir { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .passo { animation: none; } .passos { scroll-behavior: auto; } }
+.trilho { display: flex; align-items: center; height: 30px; }
+.bola { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none;
+        font-weight: 700; font-size: .82rem; background: var(--accent); color: var(--accent-fg); }
+.fio { flex: 1; height: 2px; min-width: 12px; background: var(--line); margin-left: 6px; }
+.passo .corpo, .bifurca .corpo { padding: 12px 18px 0 0; display: grid; gap: 7px; align-content: start; min-width: 0; }
+.passo .topo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; }
+.passo .titulo { font-weight: 600; font-size: .95rem; line-height: 1.25; }
+.passo .nome-no { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .7rem; color: var(--faint); }
+.passo .pergunta { color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.passo .res { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: .85rem; }
+.passo .tec { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .68rem; color: var(--faint);
+              word-break: break-word; border-top: 1px dashed var(--line); padding-top: 6px; }
+.passo.pulado .bola { background: transparent; border: 2px dashed var(--line); color: var(--faint); }
+.passo.pulado .titulo, .passo.pulado .pergunta { color: var(--faint); }
+.passo.fim-auto .bola { background: var(--auto); color: var(--surface); }
+.passo.fim-hum .bola { background: var(--human); color: var(--surface); }
+.tipo { font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; }
+.tipo.llm { background: var(--accent); color: var(--accent-fg); }
+.tipo.regra { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.caixa { background: var(--surface-2); border-radius: 8px; padding: 7px 9px; font-size: .74rem; display: grid; gap: 4px;
+         word-break: break-word; width: 100%; }
+.mini { display: flex; align-items: center; gap: 8px; width: 100%; }
+.mini .trilha-score { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.mini .trilha-score div { height: 100%; background: var(--accent); }
+.bifurca .losango { width: 16px; height: 16px; transform: rotate(45deg); margin: 0 7px; flex: none;
+                    border: 2px solid var(--warn); background: var(--warn-soft); }
+.bifurca .q { font-size: .8rem; font-weight: 600; color: var(--warn); line-height: 1.35; }
+.opcoes { display: grid; gap: 5px; justify-items: start; }
+.opcao { border: 1px dashed var(--line); border-radius: 8px; padding: 4px 9px; font-size: .76rem; color: var(--faint); }
+.opcao.escolhida { border-style: solid; border-color: var(--accent); background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+
+footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="tag">Desafio AI-First · Problema 1</span>
+      <h1 style="margin-top:8px">Agente de Atendimento</h1>
+      <p class="sub">Escreva como se fosse o cliente. O agente classifica a mensagem, cruza com o pedido, aplica
+        as políticas e decide: resolve sozinho ou encaminha a um humano, já com o dossiê pronto.</p>
+    </div>
+  </header>
+
+  <div class="grafo" aria-label="Caminho no grafo">
+    <div class="nos" id="nos"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <form id="form">
+        <div style="display:grid;gap:8px">
+          <h2>Exemplos</h2>
+          <div class="chips" id="exemplos"></div>
+        </div>
+
+        <label>Mensagem do cliente
+          <textarea id="mensagens" placeholder="Ex.: Oi, meu pedido chegou com o frasco vazado. Segue a foto." required></textarea>
+          <span style="font-weight:400;color:var(--faint);font-size:.76rem">Cada linha conta como uma mensagem separada (até 5).</span>
+        </label>
+
+        <fieldset>
+          <legend>Pedido simulado</legend>
+          <label>Canal
+            <select id="canal">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="email">E-mail</option>
+              <option value="reclame_aqui">Reclame Aqui</option>
+            </select>
+          </label>
+          <label>Marca <select id="marca"></select></label>
+          <label style="grid-column:1/-1">Status da entrega
+            <select id="status">
+              <option value="">Sem pedido vinculado</option>
+              <option value="aguardando_pagamento">Aguardando pagamento</option>
+              <option value="em_separacao">Em separação</option>
+              <option value="em_transito">Em trânsito</option>
+              <option value="atrasado">Atrasado</option>
+              <option value="entregue">Entregue</option>
+            </select>
+          </label>
+          <label>Dias desde a compra <input id="dias" type="number" min="0" max="365" value="3"></label>
+          <label>Valor (R$) <input id="valor" type="number" min="0" max="10000" step="0.01" value="129.90"></label>
+          <label style="grid-column:1/-1">Contatos anteriores sobre o pedido
+            <input id="contatos" type="number" min="0" max="20" value="0"></label>
+          <p class="dica">Dados fictícios. Nenhuma conversa ou pedido real do case é usado nesta página.</p>
+        </fieldset>
+
+        <label class="check"><input type="checkbox" id="redacao">
+          <span>Reescrever a resposta com LLM
+            <small>O texto passa por checagens; se prometer algo não decidido, volta o template.</small></span>
+        </label>
+
+        <button class="principal" id="enviar" type="submit">Atender</button>
+      </form>
+    </div>
+
+    <section id="resultado" aria-live="polite">
+      <div class="card vazio">
+        <h2>O que aparece aqui</h2>
+        <ol>
+          <li><b>Classificação</b>: categoria, motivos com a frase que os comprova, tom e recontato.</li>
+          <li><b>Prioridade</b>: score de 0 a 100 e quanto cada fator pesou.</li>
+          <li><b>Elegibilidade</b>: cada motivo comparado à política da empresa.</li>
+          <li><b>Decisão</b>: automático ou humano, e qual fila (no topo do resultado).</li>
+          <li><b>Ação</b>: a resposta que o cliente receberia, ou o dossiê para o atendente.</li>
+          <li><b>Passo a passo</b> (no fim da página): cada etapa do grafo, o que ela perguntou e o que concluiu.</li>
+        </ol>
+        <p>Escolha um exemplo ou escreva a sua mensagem.</p>
+      </div>
+    </section>
+  </div>
+
+  <section id="trilha" hidden aria-label="Passo a passo do grafo"></section>
+
+  <footer>
+    <p>Só a classificação (e a redação, se marcada) usa LLM. Prioridade, elegibilidade e decisão são regras
+      determinísticas, para que dinheiro e saúde nunca dependam de um modelo.</p>
+    <p>CPF, cartão, telefone e e-mail são mascarados antes de qualquer envio ao LLM.</p>
+  </footer>
+</div>
+
+<script>
+const NOS = ["anonimizar", "classificar", "enriquecer", "priorizar", "checar_elegibilidade",
+             "regras_fixas", "decidir", "agir", "escalar_humano"];
+const FILAS = { responsavel_tecnica: "Responsável técnica", reclame_aqui: "Reclame Aqui", financeiro: "Financeiro",
+                logistica: "Logística", comercial: "Comercial", atendimento: "Atendimento" };
+const RESULT = { elegivel: ["Elegível", "ok"], inelegivel: ["Inelegível", "no"],
+                 indeterminado: ["Falta informação", "ind"], sem_politica: ["Sem política", "sp"] };
+const FATORES = [["gravidade", "Gravidade", "--f1"], ["canal", "Canal", "--f2"], ["sla", "SLA", "--f3"],
+                 ["recontato", "Recontato", "--f4"], ["valor", "Valor", "--f5"], ["tom", "Tom", "--f6"]];
+const PESOS = { gravidade: 40, canal: 15, sla: 15, recontato: 15, valor: 10, tom: 5 };
+
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs = {}, ...filhos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v; else if (k === "style") el.style.cssText = v; else el.setAttribute(k, v);
+  }
+  for (const f of filhos.flat()) if (f !== null && f !== undefined && f !== false)
+    el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+  return el;
+}
+const rotulo = (s) => (s || "").replaceAll("_", " ");
+const brl = (v) => v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+function desenharNos(caminho = [], modo = null) {
+  const alvo = $("nos"); alvo.replaceChildren();
+  const no = (n) => {
+    let cls = "no";
+    if (caminho.includes(n)) cls += n === "agir" ? " fim-auto" : n === "escalar_humano" ? " fim-hum" : " on";
+    return h("div", { class: cls }, h("span", { class: "pt" }), n);
+  };
+  NOS.slice(0, 7).forEach(n => alvo.append(no(n), h("span", { class: "seta" }, "→")));
+  // os dois terminais são alternativos: agir (automático) OU escalar_humano
+  alvo.append(h("div", { class: "fork" }, no("agir"), no("escalar_humano")));
+}
+
+let exemplos = [];
+async function iniciar() {
+  desenharNos();
+  try {
+    const [ex, op] = await Promise.all([fetch("/api/exemplos").then(r => r.json()), fetch("/api/opcoes").then(r => r.json())]);
+    exemplos = ex;
+    $("marca").replaceChildren(...op.marcas.map(m => h("option", { value: m }, m)));
+    $("exemplos").replaceChildren(...ex.map(e => {
+      const b = h("button", { type: "button", class: "chip", "data-id": e.id }, e.titulo, h("small", {}, e.caminho));
+      b.addEventListener("click", () => aplicarExemplo(e, b));
+      return b;
+    }));
+  } catch { /* página continua utilizável sem exemplos */ }
+}
+
+function aplicarExemplo(e, botao) {
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("ativo", c === botao));
+  $("mensagens").value = e.mensagens.join("\n");
+  const p = e.pedido;
+  $("canal").value = p.canal; $("marca").value = p.marca; $("status").value = p.status_entrega || "";
+  $("dias").value = p.dias_desde_pedido ?? ""; $("valor").value = p.valor ?? ""; $("contatos").value = p.contatos_anteriores_pedido ?? 0;
+}
+
+function numero(id) { const v = $(id).value; return v === "" ? null : Number(v); }
+
+$("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const mensagens = $("mensagens").value.split("\n").map(s => s.trim()).filter(Boolean).slice(0, 5);
+  if (!mensagens.length) return;
+  const corpo = {
+    mensagens, redacao_llm: $("redacao").checked,
+    pedido: { canal: $("canal").value, marca: $("marca").value, status_entrega: $("status").value || null,
+              dias_desde_pedido: numero("dias"), valor: numero("valor"), contatos_anteriores_pedido: numero("contatos") || 0 },
+  };
+  const btn = $("enviar"); btn.disabled = true; btn.textContent = "Atendendo…";
+  desenharNos();
+  try {
+    const r = await fetch("/api/atender", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
+    const dados = await r.json();
+    if (!r.ok) throw new Error(typeof dados.detail === "string" ? dados.detail : (dados.detail || []).map(d => d.msg).join("; "));
+    mostrar(dados);
+  } catch (e) {
+    $("resultado").replaceChildren(h("div", { class: "erro" }, "Não foi possível atender: " + e.message));
+    $("trilha").hidden = true;
+  } finally { btn.disabled = false; btn.textContent = "Atender"; }
+});
+
+function card(titulo, ...corpo) { return h("div", { class: "card" }, h("h2", {}, titulo), ...corpo); }
+
+function veredito(d) {
+  if (!d) return h("div", { class: "veredito neutro" }, h("span", { class: "rot" }, "Sem conteúdo"),
+                   h("span", { class: "tit" }, "Nada a atender"), h("span", { class: "just" }, "A conversa não tem mensagem do cliente."));
+  const auto = d.modo === "automatico";
+  return h("div", { class: "veredito " + (auto ? "auto" : "hum") },
+    h("span", { class: "rot" }, auto ? "Automático" : "Encaminhado a humano"),
+    h("span", { class: "tit" }, auto ? "Resolvido pelo agente" : "Fila: " + (FILAS[d.fila_destino] || d.fila_destino || "atendimento")),
+    h("span", { class: "just" }, d.justificativa));
+}
+
+function blocoClassificacao(c) {
+  return card("1 · Classificação",
+    h("div", { class: "kv" },
+      h("span", {}, "Categoria ", h("b", {}, rotulo(c.categoria_principal))),
+      h("span", {}, "Tom ", h("b", {}, c.tom)),
+      h("span", {}, "Recontato ", h("b", {}, c.recontato ? "sim" : "não")),
+      h("span", {}, "Confiança ", h("b", {}, c.confianca))),
+    ...c.motivos.map(m => h("div", { class: "motivo" + (m.motivo === c.motivo_principal ? " principal" : "") },
+      h("span", { class: "nome" }, m.motivo, m.motivo === c.motivo_principal ? h("span", { class: "pill acc" }, "principal") : null),
+      m.evidencia ? h("span", { class: "ev" }, "“" + m.evidencia + "”") : null)),
+    h("p", { class: "muted mono" }, c.origem === "llm" ? "via " + (c.modelo || "LLM") : "via regra"));
+}
+
+function blocoPrioridade(p) {
+  const total = p.score || 0;
+  return card("2 · Prioridade",
+    h("div", { class: "score" }, h("span", { class: "n" }, total.toLocaleString("pt-BR")), h("span", { class: "muted" }, "/ 100"),
+      p.topo_da_fila ? h("span", { class: "pill hum" }, "topo da fila · saúde") : null),
+    h("div", { class: "barra", role: "img", "aria-label": "Contribuição de cada fator" },
+      ...FATORES.filter(([k]) => p.contribuicoes[k] > 0).map(([k, nome, cor]) =>
+        h("div", { style: `width:${p.contribuicoes[k]}%;background:var(${cor})`, title: `${nome}: ${p.contribuicoes[k]}` }))),
+    h("div", { class: "fatores" }, ...FATORES.map(([k, nome, cor]) => h("div", { class: "fator" },
+      h("i", { style: `background:var(${cor})` }), h("span", {}, `${nome} `, h("span", { class: "muted" }, `(${PESOS[k]}%)`)),
+      h("span", { class: "v" }, `nota ${p.fatores[k]}`), h("span", { class: "c" }, "+" + p.contribuicoes[k])))));
+}
+
+function blocoElegibilidade(e) {
+  const itens = e.avaliacoes.map(a => {
+    const [nome, cls] = RESULT[a.resultado] || [a.resultado, "sp"];
+    return h("div", { class: "item" },
+      h("span", { class: "mono" }, a.motivo, h("span", { class: "pill " + cls }, nome)),
+      h("span", { class: "muted" }, a.justificativa),
+      a.informacoes_faltantes.length ? h("ul", {}, ...a.informacoes_faltantes.map(i => h("li", {}, "pedir: " + i))) : null,
+      a.observacoes.length ? h("ul", {}, ...a.observacoes.map(i => h("li", {}, i))) : null);
+  });
+  return card("3 · Elegibilidade", h("div", { class: "eleg" }, ...(itens.length ? itens : [h("p", { class: "muted" }, "Nenhum motivo avaliado.")])));
+}
+
+function listaAcoes(acoes) {
+  if (!acoes.length) return h("p", { class: "muted" }, "Regra fixa: o caso vai direto ao humano, sem passar pela tabela de decisão.");
+  return h("div", { class: "acoes" }, ...acoes.map(a => h("div", {},
+    h("span", { class: "mono" }, a.motivo), "→", h("b", {}, rotulo(a.tipo)),
+    h("span", { class: "pill " + (a.modo === "automatico" ? "ok" : "hum") }, a.modo === "automatico" ? "automático" : "humano"))));
+}
+
+function blocoAcao(d, a) {
+  if (!d || !a) return null;
+  if (a.destino === "automatico") {
+    return card("4 · Resposta ao cliente",
+      h("div", { class: "bolha" }, a.resposta_cliente),
+      h("p", { class: "muted mono" }, "redigida via " + (a.origem_resposta || "template")),
+      h("h2", {}, "Ações registradas"), listaAcoes(d.acoes));
+  }
+  const ds = a.dossie || {};
+  const ped = ds.pedido;
+  return card("4 · Dossiê para o atendente",
+    h("div", { class: "dossie" },
+      h("div", { class: "linha" }, h("span", {}, "Fila"), h("b", {}, FILAS[ds.fila] || ds.fila || "atendimento")),
+      h("div", { class: "linha" }, h("span", {}, "Por que humano"), h("span", {}, ds.motivo_escalonamento)),
+      h("div", { class: "linha" }, h("span", {}, "Prioridade"), h("span", { class: "mono" }, ds.prioridade?.explicacao)),
+      ped ? h("div", { class: "linha" }, h("span", {}, "Pedido"),
+        h("span", {}, [rotulo(ped.status_entrega) || "sem pedido", brl(ped.valor), ped.dias_desde_pedido != null ? ped.dias_desde_pedido + " dias" : null].filter(Boolean).join(" · "))) : null,
+      h("div", { class: "linha" }, h("span", {}, "Ações sugeridas"), listaAcoes(ds.acoes_sugeridas || []))));
+}
+
+/* ---------- passo a passo do grafo ---------- */
+const ROT_RESULT = { elegivel: "ok", inelegivel: "no", indeterminado: "ind", sem_politica: "sp" };
+
+function blocoTrilha(r) {
+  const visitou = new Set(r.caminho);
+  const linha = Object.fromEntries(r.trilha.map(t => [t.split(":")[0].split(" ")[0], t]));
+  const c = r.classificacao, ctx = r.contexto, p = r.prioridade, e = r.elegibilidade, d = r.decisao;
+  const regraFixa = visitou.has("regras_fixas") && !visitou.has("decidir");
+  const viaCache = (linha.classificar || "").includes("(cache)");
+  const nMasc = parseInt((linha.anonimizar || "").match(/: (\d+)/)?.[1] || "0", 10);
+
+  const passos = [
+    { no: "anonimizar", titulo: "Protege os dados pessoais", tipo: "regra",
+      pergunta: "Tem CPF, cartão, telefone ou e-mail no texto? Se sim, é mascarado antes de ir para a LLM.",
+      res: () => [h("span", {}, nMasc ? `${nMasc} mensagem(ns) com dado pessoal mascarado` : "Nenhum dado pessoal encontrado"),
+                  h("div", { class: "caixa mono" }, ...r.mensagens_anonimizadas.map(m => h("span", {}, m)))] },
+    { no: "classificar", titulo: "Entende o que o cliente quer", tipo: viaCache ? "regra" : "llm",
+      tipoTexto: viaCache ? "cache" : "LLM",
+      pergunta: "Quais assuntos o cliente trouxe? Qual é o mais grave? Como ele está se sentindo?",
+      res: () => c && [...c.motivos.map(m => h("span", { class: "pill " + (m.motivo === c.motivo_principal ? "acc" : "sp") },
+                         m.motivo + (m.motivo === c.motivo_principal ? " · principal" : ""))),
+                       h("span", { class: "muted" }, `tom ${c.tom}${c.recontato ? " · voltou a falar" : ""}`)] },
+    { no: "enriquecer", titulo: "Consulta o pedido", tipo: "regra",
+      pergunta: "O que os dados do pedido dizem? (status, valor, idade da compra, contatos anteriores)",
+      res: () => ctx && [h("span", {}, ctx.order_id
+                    ? [rotulo(ctx.status_entrega), brl(ctx.valor), ctx.dias_desde_pedido != null ? `${ctx.dias_desde_pedido} dias desde a compra` : null,
+                       ctx.contatos_anteriores_pedido ? `${ctx.contatos_anteriores_pedido} contato(s) anterior(es)` : null].filter(Boolean).join(" · ")
+                    : "Sem pedido vinculado"),
+                  ...ctx.correcoes.map(x => h("span", { class: "pill ind" }, "correção: " + x))] },
+    { no: "priorizar", titulo: "Calcula a urgência", tipo: "regra",
+      pergunta: "Em que posição da fila esse caso entra? Nota de 0 a 100 somando gravidade, canal, SLA, recontato, valor e tom.",
+      res: () => p && [h("div", { class: "mini" }, h("b", {}, p.score.toLocaleString("pt-BR")),
+                   h("div", { class: "trilha-score" }, h("div", { style: `width:${Math.min(100, p.score)}%` })),
+                   h("span", { class: "muted" }, "/ 100")),
+                 p.topo_da_fila ? h("span", { class: "pill hum" }, "fura a fila: saúde") : null] },
+    { no: "checar_elegibilidade", titulo: "Confere as políticas da empresa", tipo: "regra",
+      pergunta: "Para cada assunto: a política permite resolver? Falta alguma informação?",
+      res: () => e && e.avaliacoes.map(a => h("span", { class: "pill " + (ROT_RESULT[a.resultado] || "sp") },
+                   `${a.motivo}: ${(RESULT[a.resultado] || [a.resultado])[0].toLowerCase()}`)) },
+    { no: "regras_fixas", titulo: "Checa as regras inegociáveis", tipo: "regra",
+      pergunta: "É caso de saúde ou veio do Reclame Aqui? Esses vão sempre para uma pessoa.",
+      res: () => [h("span", {}, regraFixa ? d.justificativa : "Não. O caso segue para a tabela de decisão.")] },
+    { no: "decidir", titulo: "Decide cada assunto", tipo: "regra",
+      pergunta: "Para cada assunto, existe uma ação que o agente pode executar sozinho?",
+      res: () => regraFixa ? [h("span", {}, "Pulado: a regra fixa já decidiu que o caso vai para uma pessoa.")]
+               : d && d.acoes.map(a => h("span", { class: "pill " + (a.modo === "automatico" ? "ok" : "hum") },
+                   `${a.motivo} → ${rotulo(a.tipo)}`)) },
+  ];
+  const fimAuto = visitou.has("agir");
+  const fim = fimAuto
+    ? { no: "agir", titulo: "Responde ao cliente", tipo: (r.acao?.origem_resposta === "llm") ? "llm" : "regra",
+        tipoTexto: r.acao?.origem_resposta === "llm" ? "LLM" : "template",
+        pergunta: "Executa as ações e escreve a resposta: um parágrafo por assunto.",
+        res: () => [h("span", {}, `Resposta enviada · ${d.acoes.length} ação(ões) registrada(s)`)] }
+    : { no: "escalar_humano", titulo: "Encaminha para uma pessoa", tipo: "regra",
+        pergunta: "Envia para a fila certa com um dossiê, para o atendente não começar do zero.",
+        res: () => [h("span", {}, "Fila: ", h("b", {}, FILAS[d?.fila_destino] || d?.fila_destino || "atendimento"))] };
+  if (d) passos.push(fim);
+
+  const el = [];
+  let i = 0;
+  const passo = (s, ultimo) => {
+    const pulado = !visitou.has(s.no);
+    const cls = "passo" + (pulado ? " pulado" : "") + (s.no === "agir" ? " fim-auto" : s.no === "escalar_humano" ? " fim-hum" : "");
+    const tec = linha[s.no];
+    el.push(h("div", { class: cls, style: `--i:${i}` },
+      h("div", { class: "trilho" }, h("div", { class: "bola" }, s.no === "agir" ? "✓" : s.no === "escalar_humano" ? "→" : String(++i)),
+        ultimo ? null : h("div", { class: "fio" })),
+      h("div", { class: "corpo" },
+        h("div", { class: "topo" }, h("span", { class: "titulo" }, s.titulo),
+          h("span", { class: "tipo " + s.tipo }, s.tipoTexto || (s.tipo === "llm" ? "LLM" : "regra")),
+          h("span", { class: "nome-no" }, s.no)),
+        h("span", { class: "pergunta" }, s.pergunta),
+        h("div", { class: "res" }, ...(s.res() || [])),
+        tec ? h("span", { class: "tec" }, tec) : null)));
+  };
+  const bifurca = (pergunta, opcoes) => el.push(h("div", { class: "bifurca" },
+    h("div", { class: "trilho" }, h("div", { class: "losango" }), h("div", { class: "fio" })),
+    h("div", { class: "corpo" }, h("span", { class: "q" }, pergunta),
+      h("div", { class: "opcoes" }, ...opcoes.map(([txt, sim]) => h("span", { class: "opcao" + (sim ? " escolhida" : "") }, (sim ? "✓ " : "") + txt))))));
+
+  passos.forEach((s, k) => {
+    if (!c || (c.motivo_principal === "sem_conteudo" && k > 1)) return;
+    passo(s, k === passos.length - 1);
+    if (s.no === "regras_fixas") bifurca("Alguma regra inegociável se aplica?",
+      [["Sim → direto para uma pessoa", regraFixa], ["Não → tabela de decisão", !regraFixa]]);
+    if (s.no === "decidir" && !regraFixa) bifurca("Todos os assuntos podem ser resolvidos sozinho?",
+      [["Sim → responde ao cliente", fimAuto], ["Não → encaminha para uma pessoa", !fimAuto]]);
+  });
+  if (c?.motivo_principal === "sem_conteudo")
+    el.push(h("p", { class: "muted" }, "Sem mensagem do cliente: o fluxo termina aqui."));
+
+  const trilho = h("div", { class: "passos" }, ...el);
+  const rolar = (dir) => trilho.scrollBy({ left: dir * 480 });
+  const btn = (txt, dir, rot) => { const b = h("button", { type: "button", "aria-label": rot }, txt); b.addEventListener("click", () => rolar(dir)); return b; };
+  return h("div", { class: "card" },
+    h("div", { class: "trilha-topo" }, h("h2", {}, "Como o agente chegou nisso · passo a passo do grafo"),
+      h("div", { class: "rolar" }, btn("‹", -1, "Voltar"), btn("›", 1, "Avançar"))),
+    h("div", { class: "legenda" },
+      h("span", {}, h("span", { class: "tipo llm" }, "LLM"), "usa modelo de linguagem"),
+      h("span", {}, h("span", { class: "tipo regra" }, "regra"), "código determinístico, sempre igual"),
+      h("span", {}, h("span", { style: "color:var(--warn)" }, "◆"), "bifurcação: o caminho escolhido fica destacado")),
+    trilho);
+}
+
+function mostrar(r) {
+  desenharNos(r.caminho, r.decisao?.modo);
+  const filhos = [veredito(r.decisao)];
+  if (r.classificacao) filhos.push(blocoClassificacao(r.classificacao));
+  if (r.prioridade || r.elegibilidade)
+    filhos.push(h("div", { class: "dupla" }, r.prioridade ? blocoPrioridade(r.prioridade) : null, r.elegibilidade ? blocoElegibilidade(r.elegibilidade) : null));
+  filhos.push(blocoAcao(r.decisao, r.acao));
+  $("resultado").replaceChildren(...filhos.filter(Boolean));
+  $("trilha").replaceChildren(blocoTrilha(r)); $("trilha").hidden = false;
+  if (window.innerWidth < 900) $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+iniciar();
+</script>
+</body>
+</html>
