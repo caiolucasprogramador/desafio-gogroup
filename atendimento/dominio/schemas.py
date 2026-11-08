@@ -45,7 +45,7 @@ class Classificacao(ClassificacaoLLM):
 # --- Etapas seguintes do grafo -------------------------------------------------
 
 class ContextoPedido(BaseModel):
-    """Saída de `enriquecer`: fatos do pedido e do cliente (sem LLM)."""
+    """Saída de `enriquecer`: fatos do pedido, do cliente e da conversa (sem LLM)."""
 
     order_id: str | None
     valor: float | None
@@ -53,10 +53,13 @@ class ContextoPedido(BaseModel):
     transportadora: str | None
     dias_desde_pedido: int | None
     n_pedidos_cliente: int
-    n_contatos_cliente: int
-    motivos_corrigidos: list[str] = Field(
+    contatos_anteriores_cliente: int = Field(description="Conversas do cliente abertas antes desta.")
+    contatos_anteriores_pedido: int = Field(description="Conversas sobre o mesmo pedido abertas antes desta.")
+    aguardando_resposta: bool = Field(description="A última mensagem é do cliente (a empresa deve resposta).")
+    horas_aguardando: float | None
+    correcoes: list[str] = Field(
         default_factory=list,
-        description="Ajustes feitos com base em fatos (ex.: rastreio_status → atraso se status_entrega=atrasado).",
+        description="Ajustes na classificação feitos com base em fatos (ex.: rastreio_status → atraso).",
     )
 
 
@@ -64,33 +67,57 @@ class Prioridade(BaseModel):
     """Saída de `priorizar`: score determinístico e seus componentes (auditável)."""
 
     score: float = Field(ge=0, le=100)
-    componentes: dict[str, float]
+    fatores: dict[str, float] = Field(description="Cada fator normalizado 0–100, antes do peso.")
+    contribuicoes: dict[str, float] = Field(description="Pontos que cada fator somou ao score (fator × peso).")
     topo_da_fila: bool = Field(description="True para saúde: fura a fila independentemente do score.")
 
 
-class Elegibilidade(BaseModel):
-    """Saída de `checar_elegibilidade`: o caso cabe na política?"""
+ResultadoElegibilidade = Literal["elegivel", "inelegivel", "indeterminado", "sem_politica"]
 
-    resultado: Literal["elegivel", "inelegivel", "indeterminado", "sem_politica"]
-    politica: str | None
+
+class AvaliacaoMotivo(BaseModel):
+    """Avaliação de UM motivo contra a política correspondente."""
+
+    motivo: str
+    politica: str | None = Field(description="id em dominio/politicas.py; None se não há política escrita.")
+    resultado: ResultadoElegibilidade
+    acao_prevista: str | None = Field(description="Ação que a política autoriza (se elegível).")
     justificativa: str
-    informacoes_faltantes: list[str] = Field(default_factory=list)
+    informacoes_faltantes: list[str] = Field(default_factory=list,
+                                             description="O que pedir ao cliente/sistema para concluir.")
+    observacoes: list[str] = Field(default_factory=list, description="Ex.: prazo de estorno, registro em 24h.")
+
+
+class Elegibilidade(BaseModel):
+    """Saída de `checar_elegibilidade`: cada motivo avaliado contra a política vigente."""
+
+    avaliacoes: list[AvaliacaoMotivo]
+    resultado: ResultadoElegibilidade = Field(description="Resultado do motivo principal.")
+
+
+FilaHumana = Literal["responsavel_tecnica", "reclame_aqui", "financeiro", "logistica", "comercial", "atendimento"]
+
+
+class AcaoPlanejada(BaseModel):
+    """O que fazer com UM motivo da conversa."""
+
+    motivo: str
+    tipo: str = Field(description="Ex.: estorno, solicitar_informacoes, informar_status, encaminhar_humano.")
+    modo: Literal["automatico", "humano"]
+    fila: FilaHumana | None = Field(default=None, description="Fila humana de destino (se modo=humano).")
+    parametros: dict = Field(default_factory=dict, description="Dados para executar a ação (valor, o que pedir...).")
+    justificativa: str
 
 
 class Decisao(BaseModel):
     """Saída de `regras_fixas` ou `decidir`."""
 
     modo: Literal["automatico", "humano"]
-    acao_proposta: str
+    acao_proposta: str = Field(description="Ação do motivo principal (resumo).")
     justificativa: str
     origem: Literal["regra", "llm"]
-
-
-class Auditoria(BaseModel):
-    """Saída de `auditar`: a decisão respeita a política?"""
-
-    aprovada: bool
-    problemas: list[str] = Field(default_factory=list)
+    fila_destino: FilaHumana | None = None
+    acoes: list[AcaoPlanejada] = Field(default_factory=list, description="Uma ação por motivo da conversa.")
 
 
 class Acao(BaseModel):
