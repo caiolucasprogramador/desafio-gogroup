@@ -1,0 +1,14 @@
+# Dados e enunciado confidenciais (não compartilhar)
+case_*/
+*.pdf
+
+# Segredos
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Dados derivados (contêm texto das conversas)
+dados/
