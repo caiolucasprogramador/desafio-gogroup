@@ -22,6 +22,8 @@ class EstadoAtendimento(TypedDict, total=False):
     status_conversa: str                 # chamador: pendente | reaberto | ...
     agora: str                           # chamador (opcional): referência p/ SLA; padrão DATA_REFERENCIA
     mensagens_cliente: list[str]         # chamador → anonimizar (substitui por versão mascarada)
+    pedido_simulado: dict | None         # chamador (API de demonstração): substitui a leitura dos CSVs
+    redacao_llm: bool                    # chamador (opcional): reescrever a resposta com LLM
 
     # Produzido pelos nós ------------------------------------------------
     classificacao: Classificacao         # classificar

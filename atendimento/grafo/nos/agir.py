@@ -14,7 +14,8 @@ from atendimento.servicos.respostas import redigir
 def agir(estado: EstadoAtendimento) -> dict:
     d = estado["decisao"]
     rascunho, origem = redigir(d, estado.get("marca", "")), "template"
-    if os.environ.get("REDACAO_LLM") == "1" and os.environ.get("SEM_LLM") != "1":
+    usar_llm = estado.get("redacao_llm", os.environ.get("REDACAO_LLM") == "1")
+    if usar_llm and os.environ.get("SEM_LLM") != "1":
         from atendimento.servicos.redacao import reescrever
         rascunho, origem = reescrever(rascunho, d, estado.get("mensagens_cliente", []), estado.get("marca", ""))
     acao = Acao(tipo=d.acao_proposta, destino="automatico", rascunho_resposta=rascunho,

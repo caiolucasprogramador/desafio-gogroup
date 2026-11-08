@@ -51,3 +51,30 @@ def enriquecer(conversation_id: str, customer_id: str | None, order_id: str | No
         correcoes=correcoes,
     )
     return ctx, classificacao
+
+
+def contexto_simulado(pedido: dict, classificacao: Classificacao) -> tuple[ContextoPedido, Classificacao]:
+    """Modo demonstração: o contexto vem de um pedido fictício informado pelo chamador.
+
+    Não lê nenhum CSV do case: é o que permite publicar o agente sem expor os dados.
+    Chaves aceitas: valor, status_entrega (None = sem pedido), dias_desde_pedido,
+    transportadora, contatos_anteriores_pedido.
+    """
+    status = pedido.get("status_entrega")
+    tem_pedido = status is not None
+    classificacao, correcoes = corrigir_por_fatos(classificacao, status)
+    anteriores = int(pedido.get("contatos_anteriores_pedido") or 0)
+    ctx = ContextoPedido(
+        order_id="PEDIDO-DEMO" if tem_pedido else None,
+        valor=float(pedido["valor"]) if tem_pedido and pedido.get("valor") is not None else None,
+        status_entrega=status,
+        transportadora=pedido.get("transportadora") if tem_pedido else None,
+        dias_desde_pedido=int(pedido["dias_desde_pedido"]) if tem_pedido and pedido.get("dias_desde_pedido") is not None else None,
+        n_pedidos_cliente=1 if tem_pedido else 0,
+        contatos_anteriores_cliente=anteriores,
+        contatos_anteriores_pedido=anteriores if tem_pedido else 0,
+        aguardando_resposta=True,  # o cliente acabou de escrever
+        horas_aguardando=0.0,
+        correcoes=correcoes,
+    )
+    return ctx, classificacao

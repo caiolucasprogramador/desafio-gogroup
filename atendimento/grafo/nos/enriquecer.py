@@ -5,14 +5,17 @@ Também corrige a classificação quando um FATO contradiz o texto
 """
 from atendimento.dominio.parametros import DATA_REFERENCIA
 from atendimento.grafo.estado import EstadoAtendimento
-from atendimento.servicos.enriquecimento import enriquecer as enriquecer_conversa
+from atendimento.servicos.enriquecimento import contexto_simulado, enriquecer as enriquecer_conversa
 
 
 def enriquecer(estado: EstadoAtendimento) -> dict:
-    ctx, classificacao = enriquecer_conversa(
-        estado["conversation_id"], estado.get("customer_id"), estado.get("order_id"),
-        estado["data_abertura"], estado["classificacao"], estado.get("agora", DATA_REFERENCIA),
-    )
+    if estado.get("pedido_simulado") is not None:  # modo demonstração (API pública): sem CSVs
+        ctx, classificacao = contexto_simulado(estado["pedido_simulado"], estado["classificacao"])
+    else:
+        ctx, classificacao = enriquecer_conversa(
+            estado["conversation_id"], estado.get("customer_id"), estado.get("order_id"),
+            estado["data_abertura"], estado["classificacao"], estado.get("agora", DATA_REFERENCIA),
+        )
     resumo = (f"pedido {ctx.order_id} R${ctx.valor} {ctx.status_entrega}; "
               f"{ctx.contatos_anteriores_pedido} contato(s) anterior(es) sobre o pedido; "
               f"{'aguardando resposta há ' + format(ctx.horas_aguardando, '.0f') + 'h' if ctx.aguardando_resposta else 'sem resposta pendente'}")
