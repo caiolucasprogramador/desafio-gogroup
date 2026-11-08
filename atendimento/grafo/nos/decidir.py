@@ -1,15 +1,17 @@
-"""Nó 7 · decidir (LLM): resolve automático vs. humano e propõe a ação, dentro da política.
+"""Nó 7 · decidir (determinístico): tabela de decisão por motivo.
 
-TODO: implementar com gpt-oss-120b. Recebe classificação, contexto, elegibilidade e,
-se houver, os problemas apontados pela auditoria anterior.
-STUB conservador: sempre humano.
+- Motivo com política → usa a elegibilidade: elegível executa (até o limite de valor),
+  indeterminado pede o que falta, inelegível explica.
+- Rastreio/atraso → regra operacional pelo status de entrega.
+- Demais motivos sem regra → fila humana adequada (financeiro, comercial, atendimento...).
+Conversa é automática só se TODOS os motivos forem automáticos. Regras em servicos/decisao.py.
 """
-from atendimento.dominio.schemas import Decisao
 from atendimento.grafo.estado import EstadoAtendimento
+from atendimento.servicos.decisao import decidir as decidir_conversa
 
 
 def decidir(estado: EstadoAtendimento) -> dict:
-    tentativa = estado.get("tentativas_decisao", 0) + 1
-    d = Decisao(modo="humano", origem="llm", acao_proposta="revisao_manual",
-                justificativa="[STUB] decisão automática ainda não implementada")
-    return {"decisao": d, "tentativas_decisao": tentativa, "trilha": [f"decidir: [STUB] tentativa {tentativa} → humano"]}
+    d = decidir_conversa(estado["classificacao"], estado["contexto"], estado["elegibilidade"])
+    acoes = "; ".join(f"{a.motivo}→{a.tipo}[{a.modo}{'/' + a.fila if a.fila else ''}]" for a in d.acoes)
+    return {"decisao": d,
+            "trilha": [f"decidir: {d.modo.upper()} | {acoes}"]}

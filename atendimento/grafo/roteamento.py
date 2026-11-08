@@ -5,8 +5,6 @@ from langgraph.graph import END
 
 from atendimento.grafo.estado import EstadoAtendimento
 
-MAX_TENTATIVAS_DECISAO = 2  # decidir → auditar reprova → decidir de novo (1x) → escala
-
 
 def apos_classificar(estado: EstadoAtendimento) -> Literal["enriquecer", "__end__"]:
     """Abandono no bot (cliente não escreveu nada): não há o que resolver."""
@@ -14,13 +12,10 @@ def apos_classificar(estado: EstadoAtendimento) -> Literal["enriquecer", "__end_
 
 
 def apos_regras_fixas(estado: EstadoAtendimento) -> Literal["escalar_humano", "decidir"]:
-    """Se uma regra fixa já decidiu, o LLM não participa."""
+    """Se uma regra fixa já decidiu (saúde, Reclame Aqui), vai direto para humano."""
     return "escalar_humano" if estado.get("decisao") else "decidir"
 
 
-def apos_auditar(estado: EstadoAtendimento) -> Literal["agir", "escalar_humano", "decidir"]:
-    if estado["auditoria"].aprovada:
-        return "agir" if estado["decisao"].modo == "automatico" else "escalar_humano"
-    if estado.get("tentativas_decisao", 0) < MAX_TENTATIVAS_DECISAO:
-        return "decidir"  # volta com os problemas apontados
-    return "escalar_humano"
+def apos_decidir(estado: EstadoAtendimento) -> Literal["agir", "escalar_humano"]:
+    """Conversa automática só se TODOS os motivos tiverem ação automática (garantido pelo decidir)."""
+    return "agir" if estado["decisao"].modo == "automatico" else "escalar_humano"

@@ -7,7 +7,7 @@ import operator
 from typing import Annotated, TypedDict
 
 from atendimento.dominio.schemas import (
-    Acao, Auditoria, Classificacao, ContextoPedido, Decisao, Elegibilidade, Prioridade,
+    Acao, Classificacao, ContextoPedido, Decisao, Elegibilidade, Prioridade,
 )
 
 
@@ -20,6 +20,7 @@ class EstadoAtendimento(TypedDict, total=False):
     marca: str                           # chamador
     data_abertura: str                   # chamador
     status_conversa: str                 # chamador: pendente | reaberto | ...
+    agora: str                           # chamador (opcional): referência p/ SLA; padrão DATA_REFERENCIA
     mensagens_cliente: list[str]         # chamador → anonimizar (substitui por versão mascarada)
 
     # Produzido pelos nós ------------------------------------------------
@@ -28,8 +29,6 @@ class EstadoAtendimento(TypedDict, total=False):
     prioridade: Prioridade               # priorizar
     elegibilidade: Elegibilidade         # checar_elegibilidade
     decisao: Decisao                     # regras_fixas | decidir
-    auditoria: Auditoria                 # auditar
-    tentativas_decisao: int              # decidir (limita o loop decidir ↔ auditar)
     acao: Acao                           # agir | escalar_humano
 
     # Trilha de auditoria: cada nó anexa uma linha explicando o que fez

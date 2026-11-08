@@ -2,17 +2,20 @@
 
     START → anonimizar → classificar ─┬─(sem_conteudo)→ END
                                       └→ enriquecer → priorizar → checar_elegibilidade → regras_fixas
-    regras_fixas ─┬─(regra disparou)→ escalar_humano → END
-                  └→ decidir → auditar ─┬─(aprovada, automático)→ agir → END
-                                        ├─(aprovada, humano)→ escalar_humano
-                                        ├─(reprovada, 1ª vez)→ decidir
-                                        └─(reprovada de novo)→ escalar_humano
+    regras_fixas ─┬─(saúde / Reclame Aqui)→ escalar_humano → END
+                  └→ decidir ─┬─(todos os motivos automáticos)→ agir → END
+                              └─(algum motivo exige humano)→ escalar_humano → END
+
+O antigo nó `auditar` foi removido: com o `decidir` determinístico, repetir a decisão
+daria o mesmo resultado. As garantias que ele checaria (saúde nunca automática, ação com
+custo só se elegível e dentro do limite, nenhum motivo esquecido) viraram testes em
+tests/test_invariantes.py, rodados contra a fila inteira.
 """
 from langgraph.graph import END, START, StateGraph
 
 from atendimento.grafo import nos
 from atendimento.grafo.estado import EstadoAtendimento
-from atendimento.grafo.roteamento import apos_auditar, apos_classificar, apos_regras_fixas
+from atendimento.grafo.roteamento import apos_classificar, apos_decidir, apos_regras_fixas
 
 
 def construir_grafo():
@@ -25,7 +28,6 @@ def construir_grafo():
     g.add_node("checar_elegibilidade", nos.checar_elegibilidade)
     g.add_node("regras_fixas", nos.regras_fixas)
     g.add_node("decidir", nos.decidir)
-    g.add_node("auditar", nos.auditar)
     g.add_node("agir", nos.agir)
     g.add_node("escalar_humano", nos.escalar_humano)
 
@@ -36,8 +38,7 @@ def construir_grafo():
     g.add_edge("priorizar", "checar_elegibilidade")
     g.add_edge("checar_elegibilidade", "regras_fixas")
     g.add_conditional_edges("regras_fixas", apos_regras_fixas)
-    g.add_edge("decidir", "auditar")
-    g.add_conditional_edges("auditar", apos_auditar)
+    g.add_conditional_edges("decidir", apos_decidir)
     g.add_edge("agir", END)
     g.add_edge("escalar_humano", END)
 
