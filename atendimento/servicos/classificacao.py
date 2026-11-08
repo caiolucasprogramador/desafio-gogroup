@@ -11,7 +11,7 @@ from atendimento.servicos.llm import criar_estruturado
 from atendimento.dominio.schemas import Classificacao, ClassificacaoLLM
 from atendimento.dominio.taxonomia import GRAVIDADE, MOTIVO_PARA_CATEGORIA, TAXONOMIA
 
-MODELO_PADRAO = "openai/gpt-oss-20b"
+MODELO_PADRAO = "gemini-3.5-flash-lite"  # escolhido no gabarito (ver README)
 
 
 def _descrever_taxonomia() -> str:

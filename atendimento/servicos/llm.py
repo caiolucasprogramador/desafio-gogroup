@@ -48,3 +48,40 @@ def espera_sugerida(erro: Exception, padrao: float = 20) -> float:
     if m := re.search(r"retry(?:Delay| in)['\": ]+([\d.]+)s", s):
         return float(m.group(1)) + 1
     return padrao
+
+
+def eh_transitorio(erro: Exception) -> bool:
+    """Falha do servidor (sobrecarga, timeout): esperar e repetir o MESMO pedido resolve."""
+    s = str(erro)
+    return any(k in s for k in ("503", "500", "502", "504", "UNAVAILABLE", "overloaded", "high demand", "timed out"))
+
+
+# --- Medição de uso ----------------------------------------------------------------
+import json  # noqa: E402
+from contextlib import contextmanager  # noqa: E402
+from datetime import datetime  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from langchain_core.callbacks import get_usage_metadata_callback  # noqa: E402
+
+ARQUIVO_USO = Path(__file__).resolve().parents[2] / "dados" / "uso_llm.jsonl"
+
+
+@contextmanager
+def medir_uso(etapa: str):
+    """Envolve chamadas a LLM e registra tokens por modelo em dados/uso_llm.jsonl.
+
+    with medir_uso("classificacao_lote"):
+        llm.invoke(...)
+    """
+    with get_usage_metadata_callback() as cb:
+        yield cb
+    if cb.usage_metadata:
+        ARQUIVO_USO.parent.mkdir(exist_ok=True)
+        with ARQUIVO_USO.open("a", encoding="utf-8") as f:
+            for modelo, uso in cb.usage_metadata.items():
+                f.write(json.dumps({
+                    "quando": datetime.now().isoformat(timespec="seconds"), "etapa": etapa, "modelo": modelo,
+                    "entrada": uso.get("input_tokens", 0), "saida": uso.get("output_tokens", 0),
+                    "total": uso.get("total_tokens", 0),
+                }) + "\n")
