@@ -12,3 +12,6 @@ __pycache__/
 
 # Dados derivados (contêm texto das conversas)
 dados/
+
+# Testes
+.pytest_cache/

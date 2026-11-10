@@ -1,10 +1,11 @@
-"""Enriquecimento: fatos do pedido, do cliente e da conversa + correções factuais da classificação."""
-import pandas as pd
+"""Enriquecimento: fatos do pedido, do cliente e da conversa + correções factuais da classificação.
 
+pandas e os CSVs só são carregados em `enriquecer` (histórico do case). O modo demonstração
+(`contexto_simulado`) não usa nenhum dos dois, por isso a API publicada não depende do pandas.
+"""
 from atendimento.dominio.parametros import DATA_REFERENCIA
 from atendimento.dominio.schemas import Classificacao, ContextoPedido, MotivoIdentificado
 from atendimento.dominio.taxonomia import MOTIVO_PARA_CATEGORIA
-from atendimento.servicos import dados
 from atendimento.servicos.classificacao import motivo_principal
 
 
@@ -24,6 +25,10 @@ def corrigir_por_fatos(c: Classificacao, status_entrega: str | None) -> tuple[Cl
 def enriquecer(conversation_id: str, customer_id: str | None, order_id: str | None,
                data_abertura: str, classificacao: Classificacao,
                agora: str = DATA_REFERENCIA) -> tuple[ContextoPedido, Classificacao]:
+    import pandas as pd
+
+    from atendimento.servicos import dados
+
     abertura, agora_ts = pd.Timestamp(data_abertura), pd.Timestamp(agora)
 
     ped = dados.pedidos()

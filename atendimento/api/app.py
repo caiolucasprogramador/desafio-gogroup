@@ -1,9 +1,9 @@
 """API pública de demonstração: roda o grafo de atendimento numa mensagem digitada.
 
-    uvicorn atendimento.api.app:app --reload
+    uvicorn main:app --reload        (main.py na raiz reexporta este app; é o que a Vercel procura)
 
 Rotas:
-    GET  /               → tela "Testar o agente" (static/index.html)
+    GET  /               → tela "Testar o agente" (public/index.html; na Vercel, servida pelo CDN)
     GET  /api/exemplos   → mensagens de exemplo (escritas à mão, não vêm do case)
     GET  /api/opcoes     → valores aceitos no pedido simulado
     POST /api/atender    → roda o grafo e devolve classificação, prioridade, elegibilidade,
@@ -17,7 +17,6 @@ from typing import Literal
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from atendimento.api.exemplos import EXEMPLOS
@@ -31,7 +30,7 @@ load_dotenv(RAIZ / ".env")
 from atendimento.grafo.fluxo import grafo  # noqa: E402  (depois do .env: os clientes LLM leem as chaves)
 from atendimento.servicos.llm import eh_cota_diaria, eh_rate_limit  # noqa: E402
 
-ESTATICOS = Path(__file__).resolve().parent / "static"
+PAGINA = RAIZ / "public" / "index.html"
 MARCAS = ["Gocase", "Kokeshi", "Ápice", "Barbour's", "Lescent", "Rituária", "By Samia", "Yenzah", "Auá"]
 STATUS = ["aguardando_pagamento", "em_separacao", "em_transito", "atrasado", "entregue"]
 NOS = ["anonimizar", "classificar", "enriquecer", "priorizar", "checar_elegibilidade",
@@ -145,7 +144,4 @@ def atender(corpo: PedidoAtendimento, request: Request) -> dict:
 
 @app.get("/")
 def inicio() -> FileResponse:
-    return FileResponse(ESTATICOS / "index.html")
-
-
-app.mount("/static", StaticFiles(directory=ESTATICOS), name="static")
+    return FileResponse(PAGINA)

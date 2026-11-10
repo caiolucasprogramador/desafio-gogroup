@@ -1,0 +1,12 @@
+# Nunca enviar dados do case, segredos ou arquivos de desenvolvimento
+case_*/
+*.pdf
+.env
+dados/
+.venv/
+tests/
+scripts/
+docs/
+__pycache__/
+*.pyc
+.pytest_cache/

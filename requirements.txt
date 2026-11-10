@@ -1,11 +1,9 @@
+# Dependências de produção (o que a API publicada usa). Lidas pela Vercel no deploy.
 langchain
 langchain-groq
+langchain-google-genai
 langgraph
 pydantic
-pandas
 python-dotenv
 fastapi
 uvicorn
-langchain-google-genai
-pytest
-httpx

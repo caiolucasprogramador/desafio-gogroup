@@ -1,0 +1,6 @@
+# Desenvolvimento local: scripts de lote (pandas) e testes.
+#   pip install -r requirements-dev.txt
+-r requirements.txt
+pandas
+pytest
+httpx

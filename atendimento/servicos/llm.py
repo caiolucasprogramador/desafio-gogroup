@@ -77,8 +77,12 @@ def medir_uso(etapa: str):
     with get_usage_metadata_callback() as cb:
         yield cb
     if cb.usage_metadata:
-        ARQUIVO_USO.parent.mkdir(exist_ok=True)
-        with ARQUIVO_USO.open("a", encoding="utf-8") as f:
+        try:
+            ARQUIVO_USO.parent.mkdir(exist_ok=True)
+            arquivo = ARQUIVO_USO.open("a", encoding="utf-8")
+        except OSError:  # disco somente leitura (ex.: Vercel): o registro é só para uso local
+            return
+        with arquivo as f:
             for modelo, uso in cb.usage_metadata.items():
                 f.write(json.dumps({
                     "quando": datetime.now().isoformat(timespec="seconds"), "etapa": etapa, "modelo": modelo,
