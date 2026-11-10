@@ -110,3 +110,12 @@ def test_chave_ausente_vira_mensagem_clara(cliente, monkeypatch):
     monkeypatch.setattr(no_classificar, "classificar_conversa", sem_chave)
     r = cliente.post("/api/atender", json={"mensagens": ["oi"], "pedido": _pedido()})
     assert r.status_code == 503 and "GEMINI_API_KEY" in r.json()["detail"]
+
+
+def test_chave_invalida_vira_mensagem_clara(cliente, monkeypatch):
+    def invalida(msgs):
+        raise RuntimeError("400 INVALID_ARGUMENT. API key not valid. Please pass a valid API key.")
+    monkeypatch.setattr(no_classificar, "classificar_conversa", invalida)
+    r = cliente.post("/api/atender", json={"mensagens": ["oi"], "pedido": _pedido()})
+    assert r.status_code == 503 and "inválida" in r.json()["detail"]
+

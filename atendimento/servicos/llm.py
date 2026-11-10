@@ -46,6 +46,11 @@ def criar_estruturado(modelo: str, schema: type[BaseModel], max_retries: int = 0
     return chat.with_structured_output(schema, method="json_schema")
 
 
+def eh_chave_invalida(erro: Exception) -> bool:
+    s = str(erro)
+    return "API key not valid" in s or "API_KEY_INVALID" in s or "Invalid API Key" in s or "invalid_api_key" in s
+
+
 def eh_rate_limit(erro: Exception) -> bool:
     s = str(erro)
     return "429" in s or "RESOURCE_EXHAUSTED" in s or "rate limit" in s.lower()

@@ -12,6 +12,7 @@ Rotas:
 
 Nenhum dado do case é lido aqui: o contexto vem do pedido simulado (ver enriquecer).
 """
+import logging
 from pathlib import Path
 from typing import Literal
 
@@ -29,7 +30,7 @@ RAIZ = Path(__file__).resolve().parents[2]
 load_dotenv(RAIZ / ".env")
 
 from atendimento.grafo.fluxo import grafo  # noqa: E402  (depois do .env: os clientes LLM leem as chaves)
-from atendimento.servicos.llm import ChaveAusente, eh_cota_diaria, eh_rate_limit  # noqa: E402
+from atendimento.servicos.llm import ChaveAusente, eh_chave_invalida, eh_cota_diaria, eh_rate_limit  # noqa: E402
 
 PUBLICO = RAIZ / "public"
 MARCAS = ["Gocase", "Kokeshi", "Ápice", "Barbour's", "Lescent", "Rituária", "By Samia", "Yenzah", "Auá"]
@@ -37,6 +38,7 @@ STATUS = ["aguardando_pagamento", "em_separacao", "em_transito", "atrasado", "en
 NOS = ["anonimizar", "classificar", "enriquecer", "priorizar", "checar_elegibilidade",
        "regras_fixas", "decidir", "agir", "escalar_humano"]
 
+log = logging.getLogger("atendimento.api")
 app = FastAPI(title="Agente de Atendimento · Desafio Gogroup", version="1.0")
 limitador = Limitador()
 
@@ -138,7 +140,10 @@ def atender(corpo: PedidoAtendimento, request: Request) -> dict:
         estado = grafo.invoke(entrada)
     except ChaveAusente as erro:  # configuração do servidor, não culpa de quem está testando
         raise HTTPException(503, f"servidor sem a chave do modelo ({erro.variavel} não configurada)")
-    except Exception as erro:  # falha do LLM de classificação (cota, rede)
+    except Exception as erro:  # falha do LLM de classificação (cota, rede, chave)
+        log.exception("falha em /api/atender")  # traceback completo nos logs do servidor (Vercel → Logs)
+        if eh_chave_invalida(erro):
+            raise HTTPException(503, "a chave do modelo configurada no servidor é inválida")
         if eh_cota_diaria(erro) or eh_rate_limit(erro):
             raise HTTPException(503, "cota gratuita do modelo de classificação esgotada; tente mais tarde")
         raise HTTPException(502, f"falha ao processar: {type(erro).__name__}")
