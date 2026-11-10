@@ -74,7 +74,9 @@ pip install -r requirements-dev.txt        # local: produção + pandas + pytest
 
 uvicorn main:app --reload                  # http://localhost:8000
 python -m pytest -q                        # testes (sem LLM)
-SEM_LLM=1 python -m scripts.processar_fila # grafo na fila real → dados/resultados_grafo.jsonl
+SEM_LLM=1 python -m scripts.processar_fila          # grafo na fila em aberto → dados/resultados_grafo.jsonl
+SEM_LLM=1 python -m scripts.processar_fila --todas  # grafo nas 4.000 → dados/resultados_grafo_historico.jsonl
+python -m scripts.gerar_diagnostico                 # → public/diagnostico.json (só agregados)
 SEM_LLM=1 python -m scripts.rodar_grafo <conversation_id> ...
 ```
 
@@ -107,6 +109,17 @@ números abaixo a cada execução e marca ✗ o que mudar). Se um número mudar,
   endereço R$ 3.611; total sem dupla contagem **R$ 48.902** (45% do custo).
 - Fila pendente/reaberta: 1.337 conversas; **59% automatizáveis** (784) e 41% para humano (553).
   Dos automáticos, 222 têm como ação principal pedir informação: a resolução completa fica em 42%.
+- **Histórico (grafo nas 4.000, sem LLM):** das 3.541 conversas com mensagem do cliente, **2.155 (61%)**
+  teriam sido resolvidas pelo agente e 1.386 iriam para humano; resolução completa 43%. As outras 459
+  não têm mensagem do cliente (abandono no bot).
+- **Saúde:** 65 conversas (1,6%): 40 reação adversa, 31 dúvida de saúde. **Não existe tag "Saúde"** na lista
+  do atendimento: caíram em Dúvida 28, Outros 11, Troca 10, Reclamação produto 8, Avaria 5 (e 1 Elogio).
+  58 das 65 foram respondidas primeiro pelo bot. Reação adversa: mediana de 9,9h até um humano, 1 acima
+  de 24h. Mensagem: o risco é **invisível** para a liderança (não dá para contar nem auditar o prazo de
+  24h da cosmetovigilância); **não** afirmar que "o bot errava" (os dados não mostram isso).
+- **Metodologia:** 14.559 mensagens (cliente 5.684, agente 5.282, bot 3.593); deduplicação: 3.541 conversas
+  com mensagem → 1.720 textos únicos (51% menos chamadas ao LLM; troca datas, nº de pedido e dados pessoais
+  por marcadores só para achar textos repetidos, toda conversa recebe a sua classificação).
 - Políticas faltantes = conversas humanas cujo **único** bloqueio é esse motivo (virariam automáticas
   com a política): brinde faltante 88, dúvida de produto 85, insatisfação 53, troca (exceto fragrância) 28,
   pagamento não confirmado 24, cupom 22, cashback 15, frete grátis 6.

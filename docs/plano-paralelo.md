@@ -145,6 +145,16 @@ Mudança no contrato = combinar antes (o Caio avisa o outro agente).
 **Histórico do contrato**
 - 2026-11-09: adicionados `totais.fator_expansao` e `totais.conversas_estimadas` (aprovado pelo Caio).
   Só acréscimo: nenhum campo existente mudou de nome ou de significado.
+- 2026-11-09: adicionados três blocos (pedido do Caio: "rodar as 4.000", aba Metodologia, história da Saúde).
+  Só acréscimo. Formatos completos em `tests/test_diagnostico.py` (`CONTRATO`).
+  - `p4_sozinho_ou_pessoa.historico`: o grafo nas **4.000** conversas do trimestre ("o que o agente teria
+    feito se estivesse no ar"). Percentuais sobre as conversas **com** mensagem do cliente
+    (`com_mensagem`); as `sem_mensagem` são abandono no bot e não têm o que resolver.
+    O resto de `p4` continua sendo a **fila em aberto** (pendentes + reabertas).
+  - `saude`: casos de saúde, as **tags manuais** em que caíram (não existe tag "Saúde"), quem respondeu
+    primeiro (bot × agente) e o tempo até um humano nas reações adversas (política: 24h).
+  - `metodologia`: funil (conversas, mensagens por autor, com/sem mensagem do cliente, textos únicos após
+    a deduplicação), conversas por status, fila em aberto, tags manuais, custo por canal, tamanho da taxonomia.
 
 ---
 

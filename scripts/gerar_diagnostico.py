@@ -5,6 +5,7 @@ Entradas (locais, fora do git):
     dados/classificacoes_<modelo>.csv            classificação das 4.000 conversas (scripts.classificar_tudo)
     dados/gabarito.csv + classificacoes_gabarito_<modelo>.csv   avaliação no gabarito
     dados/resultados_grafo.jsonl                 grafo na fila pendente/reaberta (scripts.processar_fila)
+    dados/resultados_grafo_historico.jsonl       grafo nas 4.000 do trimestre (scripts.processar_fila --todas)
 Saída (versionada e publicada): public/diagnostico.json, no contrato de docs/plano-paralelo.md.
 
 Uso: python -m scripts.gerar_diagnostico [--origem=/checkout/com/os/dados] [--modelo=gemini-3.5-flash-lite]
@@ -113,8 +114,8 @@ def carregar_conversas(origem: Path, modelo: str) -> pd.DataFrame:
     return d
 
 
-def carregar_resultados(origem: Path) -> list[dict]:
-    caminho = origem / "dados" / "resultados_grafo.jsonl"
+def carregar_resultados(origem: Path, arquivo: str = "resultados_grafo.jsonl") -> list[dict]:
+    caminho = origem / "dados" / arquivo
     return [json.loads(linha) for linha in caminho.read_text(encoding="utf-8").splitlines()]
 
 
@@ -261,6 +262,86 @@ def bloco_p4(resultados: list[dict]) -> dict:
     }
 
 
+def bloco_p4_historico(resultados: list[dict]) -> dict:
+    """O grafo nas 4.000 conversas do trimestre: o que o agente teria feito se estivesse no ar.
+
+    Conversas sem mensagem do cliente (abandono no bot) terminam no `classificar`: não há o que
+    resolver, então os percentuais usam como base as conversas COM mensagem.
+    """
+    com_msg = [r for r in resultados if r["modo"] != "encerrado"]
+    base = bloco_p4(com_msg)
+    return {
+        "conversas": len(resultados),
+        "com_mensagem": len(com_msg),
+        "sem_mensagem": len(resultados) - len(com_msg),
+        "automatico": base["automatico"],
+        "humano": base["humano"],
+        "pct_automatico": frac(base["automatico"], len(com_msg)),
+        "resolucao_completa_pct": base["resolucao_completa_pct"],
+        "por_acao": base["por_acao"],
+        "por_fila_humana": base["por_fila_humana"],
+    }
+
+
+def bloco_saude(origem: Path, d: pd.DataFrame) -> dict:
+    """Por que existe a categoria Saúde: casos reais que a lista de tags do atendimento não enxerga."""
+    sau = d[d.motivos.str.split(";").apply(lambda s: bool(set(s) & SEMPRE_HUMANO))]
+    tem = lambda m: int(sau.motivos.str.split(";").apply(lambda s: m in s).sum())  # noqa: E731
+    msgs = pd.read_csv(origem / "case_atendimento" / "mensagens.csv", usecols=["conversation_id", "autor", "timestamp"],
+                       parse_dates=["timestamp"])
+    ms = msgs[msgs.conversation_id.isin(sau.conversation_id)].sort_values("timestamp")
+    primeiro = Counter()
+    horas = []
+    reacao = set(sau[sau.motivos.str.split(";").apply(lambda s: "reacao_adversa" in s)].conversation_id)
+    for cid, g in ms.groupby("conversation_id"):
+        resp = g[g.autor != "cliente"]
+        primeiro[resp.autor.iloc[0] if len(resp) else "ninguem"] += 1
+        if cid in reacao:
+            t0 = g[g.autor == "cliente"].timestamp.min()
+            humano = g[(g.autor == "agente") & (g.timestamp >= t0)].timestamp.min()
+            if pd.notna(humano):
+                horas.append((humano - t0).total_seconds() / 3600)
+    h = pd.Series(horas)
+    tags = sau.tag_agente.fillna("(sem tag)").value_counts()
+    return {
+        "conversas": len(sau),
+        "pct_conversas": frac(len(sau), len(d)),
+        "reacao_adversa": tem("reacao_adversa"),
+        "duvida_saude": tem("duvida_saude"),
+        "existe_tag_saude": False,
+        "tags_manuais": [{"tag": t, "conversas": int(n)} for t, n in tags.items()],
+        "primeira_resposta": {"bot": primeiro["bot"], "agente": primeiro["agente"], "ninguem": primeiro["ninguem"]},
+        "reacao_horas_ate_humano_mediana": round(float(h.median()), 1) if len(h) else None,
+        "reacao_acima_24h": int((h > 24).sum()),
+        "prazo_politica_horas": 24,
+    }
+
+
+def bloco_metodologia(origem: Path, d: pd.DataFrame, fila: list[dict]) -> dict:
+    """Números do processo, para a página Metodologia (como chegamos aos resultados)."""
+    from atendimento.lote import normalizar
+    msgs = pd.read_csv(origem / "case_atendimento" / "mensagens.csv")
+    cli = msgs[msgs.autor == "cliente"].sort_values("timestamp").groupby("conversation_id").texto.apply(list)
+    unicos = {normalizar(t) for t in cli}
+    tags = d.tag_agente.dropna()
+    return {
+        "conversas": len(d),
+        "mensagens": len(msgs),
+        "mensagens_por_autor": {a: int(n) for a, n in msgs.autor.value_counts().items()},
+        "conversas_com_mensagem_cliente": len(cli),
+        "conversas_sem_mensagem_cliente": len(d) - len(cli),
+        "textos_unicos_classificados": len(unicos),
+        "economia_deduplicacao_pct": frac(len(cli) - len(unicos), len(cli)),
+        "conversas_por_status": {s_: int(n) for s_, n in d.status.value_counts().items()},
+        "fila_em_aberto": len(fila),
+        "tags_manuais_existentes": int(tags.nunique()),
+        "conversas_com_tag": len(tags),
+        "custo_por_canal": {c: CUSTO_CONVERSA[c] for c in ("whatsapp", "email", "reclame_aqui")},
+        "categorias_taxonomia": len(CATEGORIAS),
+        "motivos_taxonomia": len(MOTIVOS_ROTULO),
+    }
+
+
 def gerar(origem: Path, modelo: str) -> dict:
     d = carregar_conversas(origem, modelo)
     inicio, fim = d.data_abertura.min().date(), d.data_abertura.max().date()
@@ -275,7 +356,11 @@ def gerar(origem: Path, modelo: str) -> dict:
         "p1_por_que_procuram": bloco_p1(d),
         "p2_contatos_evitaveis": bloco_p2(d),
         "p3_atacar_primeiro": bloco_p3(d),
-        "p4_sozinho_ou_pessoa": bloco_p4(carregar_resultados(origem)),
+        "p4_sozinho_ou_pessoa": {**bloco_p4(fila := carregar_resultados(origem)),
+                                 "historico": bloco_p4_historico(
+                                     carregar_resultados(origem, "resultados_grafo_historico.jsonl"))},
+        "saude": bloco_saude(origem, d),
+        "metodologia": bloco_metodologia(origem, d, fila),
     }
 
 
@@ -299,6 +384,12 @@ REGISTRADOS = {
     "política faltante: dúvida de produto": (lambda j: _item(j[_P4]["politicas_faltantes"], "motivo", "duvida_produto")["conversas"], 85),
     "política faltante: insatisfação": (lambda j: _item(j[_P4]["politicas_faltantes"], "motivo", "insatisfacao_produto")["conversas"], 53),
     "política faltante: troca": (lambda j: _item(j[_P4]["politicas_faltantes"], "motivo", "troca_outros")["conversas"], 28),
+    "histórico: automáticas": (lambda j: j[_P4]["historico"]["automatico"], 2155),
+    "histórico: humanas": (lambda j: j[_P4]["historico"]["humano"], 1386),
+    "histórico: % automático": (lambda j: round(j[_P4]["historico"]["pct_automatico"], 2), 0.61),
+    "saúde: conversas": (lambda j: j["saude"]["conversas"], 65),
+    "saúde: 1ª resposta pelo bot": (lambda j: j["saude"]["primeira_resposta"]["bot"], 58),
+    "textos únicos classificados": (lambda j: j["metodologia"]["textos_unicos_classificados"], 1720),
 }
 
 

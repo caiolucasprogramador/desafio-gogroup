@@ -1,10 +1,12 @@
-"""Processa a fila (pendentes + reabertas) pelo GRAFO completo e grava dados/resultados_grafo.jsonl.
+"""Processa conversas pelo GRAFO completo. Sem LLM: classificação do cache, resto determinístico.
 
-É o insumo da API e do painel. Sem LLM: classificação do cache, resto determinístico.
-Uso: python -m scripts.processar_fila
+    python -m scripts.processar_fila           fila em aberto (pendentes + reabertas) → dados/resultados_grafo.jsonl
+    python -m scripts.processar_fila --todas   as 4.000 do trimestre → dados/resultados_grafo_historico.jsonl
+                                               ("o que o agente teria feito se estivesse no ar")
 """
 import json
 import os
+import sys
 import time
 from collections import Counter
 from pathlib import Path
@@ -16,6 +18,7 @@ from atendimento.servicos import dados  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parents[1]
 SAIDA = RAIZ / "dados" / "resultados_grafo.jsonl"
+SAIDA_HISTORICO = RAIZ / "dados" / "resultados_grafo_historico.jsonl"
 
 
 def resumo(estado: dict) -> dict:
@@ -38,20 +41,22 @@ def resumo(estado: dict) -> dict:
 
 
 if __name__ == "__main__":
+    todas = "--todas" in sys.argv
     conv = dados.conversas()
-    ids = conv[conv.status.isin(["pendente", "reaberto"])].conversation_id.tolist()
+    ids = (conv if todas else conv[conv.status.isin(["pendente", "reaberto"])]).conversation_id.tolist()
+    saida = SAIDA_HISTORICO if todas else SAIDA
     t0, resultados = time.time(), []
     for i, cid in enumerate(ids, 1):
         resultados.append(resumo(grafo.invoke(dados.entrada_do_grafo(cid))))
-        if i % 200 == 0:
+        if i % 500 == 0:
             print(f"  {i}/{len(ids)}")
     resultados.sort(key=lambda r: (not r["topo_da_fila"], -(r["score"] or 0)))
-    with SAIDA.open("w", encoding="utf-8") as f:
+    with saida.open("w", encoding="utf-8") as f:
         for pos, r in enumerate(resultados, 1):
             f.write(json.dumps({"posicao": pos, **r}, ensure_ascii=False, default=str) + "\n")
 
     modos = Counter(r["modo"] for r in resultados)
-    print(f"{len(resultados)} conversas em {time.time() - t0:.0f}s → {SAIDA.name}")
+    print(f"{len(resultados)} conversas em {time.time() - t0:.0f}s → {saida.name}")
     print("Modo:", dict(modos), f"| automático: {modos['automatico'] / len(resultados):.0%}")
     print("Filas humanas:", dict(Counter(r["fila_destino"] for r in resultados if r["modo"] == "humano")))
     print("Com rascunho:", sum(bool(r["rascunho_resposta"]) for r in resultados))

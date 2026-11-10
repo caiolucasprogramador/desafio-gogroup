@@ -563,6 +563,181 @@
         "conversas": 6,
         "sugestao": "Regra de frete grátis acessível ao agente, com estorno automático da diferença."
       }
-    ]
+    ],
+    "historico": {
+      "conversas": 4000,
+      "com_mensagem": 3541,
+      "sem_mensagem": 459,
+      "automatico": 2155,
+      "humano": 1386,
+      "pct_automatico": 0.6086,
+      "resolucao_completa_pct": 0.4341,
+      "por_acao": [
+        {
+          "acao": "solicitar_informacoes",
+          "rotulo": "Pedir informação ao cliente",
+          "modo": "automatico",
+          "conversas": 618
+        },
+        {
+          "acao": "abrir_chamado_transportadora",
+          "rotulo": "Abrir chamado na transportadora",
+          "modo": "automatico",
+          "conversas": 588
+        },
+        {
+          "acao": "informar_status",
+          "rotulo": "Informar status do pedido",
+          "modo": "automatico",
+          "conversas": 518
+        },
+        {
+          "acao": "reembolso_integral",
+          "rotulo": "Reembolso integral",
+          "modo": "automatico",
+          "conversas": 162
+        },
+        {
+          "acao": "informar_inelegibilidade",
+          "rotulo": "Explicar que a política não cobre",
+          "modo": "automatico",
+          "conversas": 117
+        },
+        {
+          "acao": "estorno",
+          "rotulo": "Estorno de cobrança duplicada",
+          "modo": "automatico",
+          "conversas": 98
+        },
+        {
+          "acao": "agradecer",
+          "rotulo": "Agradecer elogio",
+          "modo": "automatico",
+          "conversas": 34
+        },
+        {
+          "acao": "reenvio_sem_custo",
+          "rotulo": "Reenvio sem custo",
+          "modo": "automatico",
+          "conversas": 12
+        },
+        {
+          "acao": "nova_producao",
+          "rotulo": "Nova produção da personalização",
+          "modo": "automatico",
+          "conversas": 8
+        }
+      ],
+      "por_fila_humana": [
+        {
+          "fila": "reclame_aqui",
+          "rotulo": "Reclame Aqui",
+          "conversas": 400
+        },
+        {
+          "fila": "atendimento",
+          "rotulo": "Atendimento",
+          "conversas": 391
+        },
+        {
+          "fila": "comercial",
+          "rotulo": "Comercial",
+          "conversas": 364
+        },
+        {
+          "fila": "financeiro",
+          "rotulo": "Financeiro",
+          "conversas": 122
+        },
+        {
+          "fila": "responsavel_tecnica",
+          "rotulo": "Responsável técnica",
+          "conversas": 65
+        },
+        {
+          "fila": "logistica",
+          "rotulo": "Logística",
+          "conversas": 44
+        }
+      ]
+    }
+  },
+  "saude": {
+    "conversas": 65,
+    "pct_conversas": 0.0163,
+    "reacao_adversa": 40,
+    "duvida_saude": 31,
+    "existe_tag_saude": false,
+    "tags_manuais": [
+      {
+        "tag": "Dúvida",
+        "conversas": 28
+      },
+      {
+        "tag": "Outros",
+        "conversas": 11
+      },
+      {
+        "tag": "Troca",
+        "conversas": 10
+      },
+      {
+        "tag": "Reclamação produto",
+        "conversas": 8
+      },
+      {
+        "tag": "Avaria",
+        "conversas": 5
+      },
+      {
+        "tag": "Elogio",
+        "conversas": 1
+      },
+      {
+        "tag": "Promoção",
+        "conversas": 1
+      },
+      {
+        "tag": "Atraso",
+        "conversas": 1
+      }
+    ],
+    "primeira_resposta": {
+      "bot": 58,
+      "agente": 7,
+      "ninguem": 0
+    },
+    "reacao_horas_ate_humano_mediana": 9.9,
+    "reacao_acima_24h": 1,
+    "prazo_politica_horas": 24
+  },
+  "metodologia": {
+    "conversas": 4000,
+    "mensagens": 14559,
+    "mensagens_por_autor": {
+      "cliente": 5684,
+      "agente": 5282,
+      "bot": 3593
+    },
+    "conversas_com_mensagem_cliente": 3541,
+    "conversas_sem_mensagem_cliente": 459,
+    "textos_unicos_classificados": 1720,
+    "economia_deduplicacao_pct": 0.5143,
+    "conversas_por_status": {
+      "resolvido": 2204,
+      "pendente": 982,
+      "sem_resposta_cliente": 459,
+      "reaberto": 355
+    },
+    "fila_em_aberto": 1337,
+    "tags_manuais_existentes": 13,
+    "conversas_com_tag": 3692,
+    "custo_por_canal": {
+      "whatsapp": 4.8,
+      "email": 7.2,
+      "reclame_aqui": 42.0
+    },
+    "categorias_taxonomia": 8,
+    "motivos_taxonomia": 25
   }
 }
