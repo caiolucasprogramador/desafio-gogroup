@@ -1,105 +1,568 @@
 {
-  "exemplo": true,
+  "exemplo": false,
   "gerado_em": "2026-11-09",
-  "periodo": { "inicio": "2026-07-02", "fim": "2026-09-30", "dias": 90 },
-
+  "periodo": {
+    "inicio": "2026-07-02",
+    "fim": "2026-09-29",
+    "dias": 90
+  },
   "totais": {
     "conversas": 4000,
-    "custo_estimado": 100000,
+    "fator_expansao": 3,
+    "conversas_estimadas": 12000,
+    "custo_estimado": 108299,
     "marcas": 9
   },
-
   "classificacao": {
-    "amostra_gabarito": 100,
-    "acerto_agente": 0.9,
-    "acerto_tag_manual": 0.6,
-    "recall_motivos": 0.95,
-    "saude_detectada": "10/10",
+    "amostra_gabarito": 96,
+    "acerto_agente": 0.9479,
+    "acerto_tag_manual": 0.5319,
+    "recall_motivos": 0.9829,
+    "saude_detectada": "14/14",
     "modelo": "gemini-3.5-flash-lite",
-    "observacao": "DADOS DE EXEMPLO. Gabarito rotulado por IA, sem validação humana."
+    "observacao": "Gabarito rotulado por IA, sem validação humana. Contagens de conversas são da amostra (1 em cada 3 clientes); custos são trimestrais, estimados para a operação inteira (amostra × 3)."
   },
-
   "p1_por_que_procuram": {
     "categorias": [
-      { "categoria": "entrega", "rotulo": "Entrega", "conversas": 1600, "pct_conversas": 0.4, "custo": 40000, "pct_custo": 0.4 },
-      { "categoria": "pedido_incompleto_danificado", "rotulo": "Pedido incompleto ou danificado", "conversas": 600, "pct_conversas": 0.15, "custo": 15000, "pct_custo": 0.15 },
-      { "categoria": "cancelamento_troca", "rotulo": "Cancelamento e troca", "conversas": 500, "pct_conversas": 0.125, "custo": 12000, "pct_custo": 0.12 },
-      { "categoria": "financeiro", "rotulo": "Financeiro", "conversas": 400, "pct_conversas": 0.1, "custo": 12000, "pct_custo": 0.12 },
-      { "categoria": "promocao", "rotulo": "Promoção e cupom", "conversas": 300, "pct_conversas": 0.075, "custo": 6000, "pct_custo": 0.06 },
-      { "categoria": "produto", "rotulo": "Produto", "conversas": 300, "pct_conversas": 0.075, "custo": 6000, "pct_custo": 0.06 },
-      { "categoria": "saude", "rotulo": "Saúde", "conversas": 100, "pct_conversas": 0.025, "custo": 5000, "pct_custo": 0.05 },
-      { "categoria": "outros", "rotulo": "Outros", "conversas": 200, "pct_conversas": 0.05, "custo": 4000, "pct_custo": 0.04 }
+      {
+        "categoria": "entrega",
+        "rotulo": "Entrega",
+        "conversas": 1442,
+        "pct_conversas": 0.3605,
+        "custo": 41576,
+        "pct_custo": 0.3839
+      },
+      {
+        "categoria": "pedido_incompleto_danificado",
+        "rotulo": "Pedido incompleto ou danificado",
+        "conversas": 877,
+        "pct_conversas": 0.2193,
+        "custo": 22997,
+        "pct_custo": 0.2123
+      },
+      {
+        "categoria": "financeiro",
+        "rotulo": "Financeiro",
+        "conversas": 311,
+        "pct_conversas": 0.0777,
+        "custo": 11884,
+        "pct_custo": 0.1097
+      },
+      {
+        "categoria": "cancelamento_troca",
+        "rotulo": "Cancelamento e troca",
+        "conversas": 410,
+        "pct_conversas": 0.1025,
+        "custo": 11794,
+        "pct_custo": 0.1089
+      },
+      {
+        "categoria": "produto",
+        "rotulo": "Produto",
+        "conversas": 302,
+        "pct_conversas": 0.0755,
+        "custo": 8046,
+        "pct_custo": 0.0743
+      },
+      {
+        "categoria": "outros",
+        "rotulo": "Outros",
+        "conversas": 497,
+        "pct_conversas": 0.1242,
+        "custo": 7654,
+        "pct_custo": 0.0707
+      },
+      {
+        "categoria": "promocao",
+        "rotulo": "Promoção e cupom",
+        "conversas": 96,
+        "pct_conversas": 0.024,
+        "custo": 2516,
+        "pct_custo": 0.0232
+      },
+      {
+        "categoria": "saude",
+        "rotulo": "Saúde",
+        "conversas": 65,
+        "pct_conversas": 0.0163,
+        "custo": 1832,
+        "pct_custo": 0.0169
+      }
     ],
     "motivos": [
-      { "motivo": "atraso", "rotulo": "Atraso na entrega", "categoria": "entrega", "conversas": 800, "pct_conversas": 0.2, "custo": 22000, "pct_custo": 0.22, "gravidade": 50 },
-      { "motivo": "rastreio_status", "rotulo": "Dúvida sobre rastreio", "categoria": "entrega", "conversas": 700, "pct_conversas": 0.175, "custo": 15000, "pct_custo": 0.15, "gravidade": 25 },
-      { "motivo": "item_faltante", "rotulo": "Item faltante", "categoria": "pedido_incompleto_danificado", "conversas": 250, "pct_conversas": 0.0625, "custo": 6000, "pct_custo": 0.06, "gravidade": 55 },
-      { "motivo": "arrependimento", "rotulo": "Arrependimento", "categoria": "cancelamento_troca", "conversas": 250, "pct_conversas": 0.0625, "custo": 6000, "pct_custo": 0.06, "gravidade": 60 },
-      { "motivo": "cobranca_duplicada", "rotulo": "Cobrança duplicada", "categoria": "financeiro", "conversas": 200, "pct_conversas": 0.05, "custo": 7000, "pct_custo": 0.07, "gravidade": 80 },
-      { "motivo": "cupom_promocao_nao_aplicou", "rotulo": "Cupom não aplicado", "categoria": "promocao", "conversas": 200, "pct_conversas": 0.05, "custo": 4000, "pct_custo": 0.04, "gravidade": 25 },
-      { "motivo": "brinde_faltante", "rotulo": "Brinde faltante", "categoria": "pedido_incompleto_danificado", "conversas": 200, "pct_conversas": 0.05, "custo": 4000, "pct_custo": 0.04, "gravidade": 35 },
-      { "motivo": "duvida_produto", "rotulo": "Dúvida sobre produto", "categoria": "produto", "conversas": 200, "pct_conversas": 0.05, "custo": 3000, "pct_custo": 0.03, "gravidade": 15 },
-      { "motivo": "reacao_adversa", "rotulo": "Reação adversa", "categoria": "saude", "conversas": 60, "pct_conversas": 0.015, "custo": 3000, "pct_custo": 0.03, "gravidade": 100 },
-      { "motivo": "alteracao_endereco", "rotulo": "Alteração de endereço", "categoria": "entrega", "conversas": 100, "pct_conversas": 0.025, "custo": 3000, "pct_custo": 0.03, "gravidade": 50 }
+      {
+        "motivo": "atraso",
+        "rotulo": "Atraso na entrega",
+        "categoria": "entrega",
+        "conversas": 725,
+        "pct_conversas": 0.1812,
+        "custo": 23738,
+        "pct_custo": 0.2192,
+        "gravidade": 50
+      },
+      {
+        "motivo": "rastreio_status",
+        "rotulo": "Dúvida sobre rastreio",
+        "categoria": "entrega",
+        "conversas": 581,
+        "pct_conversas": 0.1452,
+        "custo": 14227,
+        "pct_custo": 0.1314,
+        "gravidade": 25
+      },
+      {
+        "motivo": "avaria_vazamento",
+        "rotulo": "Avaria ou vazamento",
+        "categoria": "pedido_incompleto_danificado",
+        "conversas": 321,
+        "pct_conversas": 0.0803,
+        "custo": 8546,
+        "pct_custo": 0.0789,
+        "gravidade": 55
+      },
+      {
+        "motivo": "cobranca_duplicada",
+        "rotulo": "Cobrança duplicada",
+        "categoria": "financeiro",
+        "conversas": 162,
+        "pct_conversas": 0.0405,
+        "custo": 7186,
+        "pct_custo": 0.0663,
+        "gravidade": 80
+      },
+      {
+        "motivo": "sem_conteudo",
+        "rotulo": "Abandono no bot",
+        "categoria": "outros",
+        "conversas": 459,
+        "pct_conversas": 0.1148,
+        "custo": 6610,
+        "pct_custo": 0.061,
+        "gravidade": 0
+      },
+      {
+        "motivo": "item_faltante",
+        "rotulo": "Item faltante",
+        "categoria": "pedido_incompleto_danificado",
+        "conversas": 278,
+        "pct_conversas": 0.0695,
+        "custo": 6430,
+        "pct_custo": 0.0594,
+        "gravidade": 55
+      },
+      {
+        "motivo": "arrependimento",
+        "rotulo": "Arrependimento",
+        "categoria": "cancelamento_troca",
+        "conversas": 190,
+        "pct_conversas": 0.0475,
+        "custo": 5681,
+        "pct_custo": 0.0525,
+        "gravidade": 60
+      },
+      {
+        "motivo": "brinde_faltante",
+        "rotulo": "Brinde faltante",
+        "categoria": "pedido_incompleto_danificado",
+        "conversas": 155,
+        "pct_conversas": 0.0387,
+        "custo": 4723,
+        "pct_custo": 0.0436,
+        "gravidade": 35
+      },
+      {
+        "motivo": "duvida_produto",
+        "rotulo": "Dúvida sobre produto",
+        "categoria": "produto",
+        "conversas": 170,
+        "pct_conversas": 0.0425,
+        "custo": 4403,
+        "pct_custo": 0.0407,
+        "gravidade": 15
+      },
+      {
+        "motivo": "insatisfacao_produto",
+        "rotulo": "Insatisfação com o produto",
+        "categoria": "produto",
+        "conversas": 132,
+        "pct_conversas": 0.033,
+        "custo": 3643,
+        "pct_custo": 0.0336,
+        "gravidade": 20
+      },
+      {
+        "motivo": "alteracao_endereco",
+        "rotulo": "Alteração de endereço",
+        "categoria": "entrega",
+        "conversas": 136,
+        "pct_conversas": 0.034,
+        "custo": 3611,
+        "pct_custo": 0.0333,
+        "gravidade": 50
+      },
+      {
+        "motivo": "erro_personalizacao",
+        "rotulo": "Erro de personalização",
+        "categoria": "pedido_incompleto_danificado",
+        "conversas": 123,
+        "pct_conversas": 0.0307,
+        "custo": 3298,
+        "pct_custo": 0.0304,
+        "gravidade": 55
+      },
+      {
+        "motivo": "troca_outros",
+        "rotulo": "Troca (exceto fragrância)",
+        "categoria": "cancelamento_troca",
+        "conversas": 79,
+        "pct_conversas": 0.0198,
+        "custo": 2437,
+        "pct_custo": 0.0225,
+        "gravidade": 40
+      },
+      {
+        "motivo": "pagamento_nao_confirmado",
+        "rotulo": "Pagamento não confirmado",
+        "categoria": "financeiro",
+        "conversas": 62,
+        "pct_conversas": 0.0155,
+        "custo": 1865,
+        "pct_custo": 0.0172,
+        "gravidade": 70
+      },
+      {
+        "motivo": "cobranca_nao_reconhecida",
+        "rotulo": "Cobrança não reconhecida",
+        "categoria": "financeiro",
+        "conversas": 52,
+        "pct_conversas": 0.013,
+        "custo": 1840,
+        "pct_custo": 0.017,
+        "gravidade": 80
+      },
+      {
+        "motivo": "cupom_promocao_nao_aplicou",
+        "rotulo": "Cupom não aplicado",
+        "categoria": "promocao",
+        "conversas": 69,
+        "pct_conversas": 0.0173,
+        "custo": 1750,
+        "pct_custo": 0.0162,
+        "gravidade": 25
+      },
+      {
+        "motivo": "compra_duplicada_cliente",
+        "rotulo": "Compra duplicada pelo cliente",
+        "categoria": "cancelamento_troca",
+        "conversas": 57,
+        "pct_conversas": 0.0143,
+        "custo": 1534,
+        "pct_custo": 0.0142,
+        "gravidade": 60
+      },
+      {
+        "motivo": "reacao_adversa",
+        "rotulo": "Reação adversa",
+        "categoria": "saude",
+        "conversas": 40,
+        "pct_conversas": 0.01,
+        "custo": 1303,
+        "pct_custo": 0.012,
+        "gravidade": 100
+      },
+      {
+        "motivo": "cancelar_recomprar_cupom",
+        "rotulo": "Cancelar para recomprar com cupom",
+        "categoria": "cancelamento_troca",
+        "conversas": 45,
+        "pct_conversas": 0.0112,
+        "custo": 1174,
+        "pct_custo": 0.0108,
+        "gravidade": 35
+      },
+      {
+        "motivo": "elogio",
+        "rotulo": "Elogio",
+        "categoria": "outros",
+        "conversas": 38,
+        "pct_conversas": 0.0095,
+        "custo": 1044,
+        "pct_custo": 0.0096,
+        "gravidade": 5
+      },
+      {
+        "motivo": "cashback",
+        "rotulo": "Cashback",
+        "categoria": "financeiro",
+        "conversas": 35,
+        "pct_conversas": 0.0088,
+        "custo": 994,
+        "pct_custo": 0.0092,
+        "gravidade": 35
+      },
+      {
+        "motivo": "troca_fragrancia",
+        "rotulo": "Troca de fragrância",
+        "categoria": "cancelamento_troca",
+        "conversas": 39,
+        "pct_conversas": 0.0097,
+        "custo": 968,
+        "pct_custo": 0.0089,
+        "gravidade": 40
+      },
+      {
+        "motivo": "frete_gratis",
+        "rotulo": "Frete grátis não aplicado",
+        "categoria": "promocao",
+        "conversas": 27,
+        "pct_conversas": 0.0067,
+        "custo": 767,
+        "pct_custo": 0.0071,
+        "gravidade": 25
+      },
+      {
+        "motivo": "duvida_saude",
+        "rotulo": "Dúvida de saúde",
+        "categoria": "saude",
+        "conversas": 25,
+        "pct_conversas": 0.0063,
+        "custo": 529,
+        "pct_custo": 0.0049,
+        "gravidade": 90
+      }
     ],
     "canais": [
-      { "canal": "whatsapp", "rotulo": "WhatsApp", "conversas": 2800, "pct_conversas": 0.7, "custo_unitario": 4.8, "custo": 35000, "pct_custo": 0.35 },
-      { "canal": "email", "rotulo": "E-mail", "conversas": 800, "pct_conversas": 0.2, "custo_unitario": 7.2, "custo": 15000, "pct_custo": 0.15 },
-      { "canal": "reclame_aqui", "rotulo": "Reclame Aqui", "conversas": 400, "pct_conversas": 0.1, "custo_unitario": 42.0, "custo": 50000, "pct_custo": 0.5 }
+      {
+        "canal": "reclame_aqui",
+        "rotulo": "Reclame Aqui",
+        "conversas": 407,
+        "pct_conversas": 0.1017,
+        "custo_unitario": 42.0,
+        "custo": 51282,
+        "pct_custo": 0.4735
+      },
+      {
+        "canal": "whatsapp",
+        "rotulo": "WhatsApp",
+        "conversas": 2860,
+        "pct_conversas": 0.715,
+        "custo_unitario": 4.8,
+        "custo": 41184,
+        "pct_custo": 0.3803
+      },
+      {
+        "canal": "email",
+        "rotulo": "E-mail",
+        "conversas": 733,
+        "pct_conversas": 0.1832,
+        "custo_unitario": 7.2,
+        "custo": 15833,
+        "pct_custo": 0.1462
+      }
     ]
   },
-
   "p2_contatos_evitaveis": {
-    "total_custo": 50000,
+    "total_custo": 48902,
     "itens": [
-      { "id": "recontato", "rotulo": "Cliente voltando a perguntar", "conversas": 1000, "custo": 25000,
-        "como_evitar": "Responder o primeiro contato por completo, com todos os assuntos." },
-      { "id": "rastreio", "rotulo": "Dúvida de rastreio", "conversas": 700, "custo": 15000,
-        "como_evitar": "Aviso proativo de status e link de rastreio na confirmação do pedido." },
-      { "id": "abandono_bot", "rotulo": "Abandono no bot", "conversas": 300, "custo": 6000,
-        "como_evitar": "Formulário guiado por motivo antes de abrir o atendimento." },
-      { "id": "endereco", "rotulo": "Alteração de endereço", "conversas": 100, "custo": 4000,
-        "como_evitar": "Autoatendimento para alterar o endereço antes da separação." }
+      {
+        "id": "recontato",
+        "rotulo": "Cliente voltando a perguntar",
+        "conversas": 739,
+        "custo": 28642,
+        "como_evitar": "Responder o primeiro contato por completo, com todos os assuntos, e avisar proativamente quando houver novidade."
+      },
+      {
+        "id": "rastreio",
+        "rotulo": "Dúvida de rastreio",
+        "conversas": 581,
+        "custo": 14227,
+        "como_evitar": "Aviso proativo de status (WhatsApp/e-mail) e link de rastreio na confirmação do pedido."
+      },
+      {
+        "id": "abandono_bot",
+        "rotulo": "Abandono no bot",
+        "conversas": 459,
+        "custo": 6610,
+        "como_evitar": "Menu do bot guiado por motivo, com a resposta para os casos simples antes de abrir atendimento."
+      },
+      {
+        "id": "endereco",
+        "rotulo": "Alteração de endereço",
+        "conversas": 136,
+        "custo": 3611,
+        "como_evitar": "Autoatendimento no site para alterar o endereço enquanto o pedido não foi separado."
+      }
     ]
   },
-
   "p3_atacar_primeiro": {
-    "criterio": "DADOS DE EXEMPLO. Custo trimestral × gravidade × facilidade de ação.",
+    "criterio": "Custo trimestral × gravidade × facilidade de ação: primeiro o que concentra custo e tem ação clara; saúde entra pela gravidade, não pelo custo.",
     "itens": [
-      { "rank": 1, "foco": "Reclame Aqui", "porque": "10% dos contatos e 50% do custo.", "conversas": 400, "custo": 50000 },
-      { "rank": 2, "foco": "Atraso e rastreio", "porque": "Maior volume; boa parte evitável com aviso proativo.", "conversas": 1500, "custo": 37000 },
-      { "rank": 3, "foco": "Recontato", "porque": "Contatos que existem porque o primeiro não resolveu.", "conversas": 1000, "custo": 25000 },
-      { "rank": 4, "foco": "Saúde", "porque": "Baixo volume, risco alto: precisa de resposta em até 24h.", "conversas": 100, "custo": 5000 }
+      {
+        "rank": 1,
+        "foco": "Reclame Aqui",
+        "porque": "10% dos contatos e 47% do custo: cada caso custa 9× um WhatsApp e a resposta é pública.",
+        "conversas": 407,
+        "custo": 51282
+      },
+      {
+        "rank": 2,
+        "foco": "Atraso e rastreio",
+        "porque": "Maior volume (33% dos contatos); a dúvida de rastreio some com aviso proativo e o atraso vira chamado automático na transportadora.",
+        "conversas": 1306,
+        "custo": 37966
+      },
+      {
+        "rank": 3,
+        "foco": "Recontato",
+        "porque": "18% das conversas são o cliente voltando a perguntar: contatos que só existem porque o primeiro não resolveu.",
+        "conversas": 739,
+        "custo": 28642
+      },
+      {
+        "rank": 4,
+        "foco": "Saúde",
+        "porque": "Poucos casos (1,6%), mas risco ao cliente e prazo de 24h de cosmetovigilância: fura a fila e vai sempre para a responsável técnica.",
+        "conversas": 65,
+        "custo": 1832
+      }
     ]
   },
-
   "p4_sozinho_ou_pessoa": {
-    "fila_avaliada": 1300,
-    "automatico": 800,
-    "humano": 500,
-    "resolucao_completa_pct": 0.4,
+    "fila_avaliada": 1337,
+    "automatico": 784,
+    "humano": 553,
+    "resolucao_completa_pct": 0.4203,
     "por_acao": [
-      { "acao": "solicitar_informacoes", "rotulo": "Pedir informação ao cliente", "modo": "automatico", "conversas": 250 },
-      { "acao": "abrir_chamado_transportadora", "rotulo": "Abrir chamado na transportadora", "modo": "automatico", "conversas": 200 },
-      { "acao": "informar_status", "rotulo": "Informar status do pedido", "modo": "automatico", "conversas": 200 },
-      { "acao": "reembolso_integral", "rotulo": "Reembolso integral", "modo": "automatico", "conversas": 60 },
-      { "acao": "informar_inelegibilidade", "rotulo": "Explicar que a política não cobre", "modo": "automatico", "conversas": 40 },
-      { "acao": "estorno", "rotulo": "Estorno de cobrança duplicada", "modo": "automatico", "conversas": 30 },
-      { "acao": "agradecer", "rotulo": "Agradecer elogio", "modo": "automatico", "conversas": 20 }
+      {
+        "acao": "solicitar_informacoes",
+        "rotulo": "Pedir informação ao cliente",
+        "modo": "automatico",
+        "conversas": 222
+      },
+      {
+        "acao": "abrir_chamado_transportadora",
+        "rotulo": "Abrir chamado na transportadora",
+        "modo": "automatico",
+        "conversas": 219
+      },
+      {
+        "acao": "informar_status",
+        "rotulo": "Informar status do pedido",
+        "modo": "automatico",
+        "conversas": 180
+      },
+      {
+        "acao": "reembolso_integral",
+        "rotulo": "Reembolso integral",
+        "modo": "automatico",
+        "conversas": 66
+      },
+      {
+        "acao": "informar_inelegibilidade",
+        "rotulo": "Explicar que a política não cobre",
+        "modo": "automatico",
+        "conversas": 43
+      },
+      {
+        "acao": "estorno",
+        "rotulo": "Estorno de cobrança duplicada",
+        "modo": "automatico",
+        "conversas": 36
+      },
+      {
+        "acao": "agradecer",
+        "rotulo": "Agradecer elogio",
+        "modo": "automatico",
+        "conversas": 15
+      },
+      {
+        "acao": "nova_producao",
+        "rotulo": "Nova produção da personalização",
+        "modo": "automatico",
+        "conversas": 3
+      }
     ],
     "por_fila_humana": [
-      { "fila": "atendimento", "rotulo": "Atendimento", "conversas": 150 },
-      { "fila": "reclame_aqui", "rotulo": "Reclame Aqui", "conversas": 150 },
-      { "fila": "comercial", "rotulo": "Comercial", "conversas": 100 },
-      { "fila": "financeiro", "rotulo": "Financeiro", "conversas": 50 },
-      { "fila": "responsavel_tecnica", "rotulo": "Responsável técnica", "conversas": 30 },
-      { "fila": "logistica", "rotulo": "Logística", "conversas": 20 }
+      {
+        "fila": "atendimento",
+        "rotulo": "Atendimento",
+        "conversas": 170
+      },
+      {
+        "fila": "reclame_aqui",
+        "rotulo": "Reclame Aqui",
+        "conversas": 157
+      },
+      {
+        "fila": "comercial",
+        "rotulo": "Comercial",
+        "conversas": 137
+      },
+      {
+        "fila": "financeiro",
+        "rotulo": "Financeiro",
+        "conversas": 43
+      },
+      {
+        "fila": "responsavel_tecnica",
+        "rotulo": "Responsável técnica",
+        "conversas": 27
+      },
+      {
+        "fila": "logistica",
+        "rotulo": "Logística",
+        "conversas": 19
+      }
     ],
     "politicas_faltantes": [
-      { "motivo": "brinde_faltante", "rotulo": "Brinde faltante", "conversas": 90, "sugestao": "Política de reenvio do brinde." },
-      { "motivo": "duvida_produto", "rotulo": "Dúvida sobre produto", "conversas": 80, "sugestao": "Base de conhecimento de produtos para o agente consultar." },
-      { "motivo": "insatisfacao_produto", "rotulo": "Insatisfação com o produto", "conversas": 50, "sugestao": "Política de troca por insatisfação, como a de fragrância." },
-      { "motivo": "troca_outros", "rotulo": "Troca (exceto fragrância)", "conversas": 30, "sugestao": "Política geral de troca (tamanho, modelo)." }
+      {
+        "motivo": "brinde_faltante",
+        "rotulo": "Brinde faltante",
+        "conversas": 88,
+        "sugestao": "Política de reenvio do brinde (ou cupom equivalente) quando a promoção estava ativa."
+      },
+      {
+        "motivo": "duvida_produto",
+        "rotulo": "Dúvida sobre produto",
+        "conversas": 85,
+        "sugestao": "Base de conhecimento de produtos (composição, uso, validade) para o agente consultar."
+      },
+      {
+        "motivo": "insatisfacao_produto",
+        "rotulo": "Insatisfação com o produto",
+        "conversas": 53,
+        "sugestao": "Política de troca ou cupom por insatisfação, como a que já existe para fragrância."
+      },
+      {
+        "motivo": "troca_outros",
+        "rotulo": "Troca (exceto fragrância)",
+        "conversas": 28,
+        "sugestao": "Política geral de troca (tamanho, modelo, expectativa) com prazo e condições."
+      },
+      {
+        "motivo": "pagamento_nao_confirmado",
+        "rotulo": "Pagamento não confirmado",
+        "conversas": 24,
+        "sugestao": "Consulta automática da baixa do pagamento no gateway antes de responder."
+      },
+      {
+        "motivo": "cupom_promocao_nao_aplicou",
+        "rotulo": "Cupom não aplicado",
+        "conversas": 22,
+        "sugestao": "Regras de cupons e promoções acessíveis ao agente, com crédito automático."
+      },
+      {
+        "motivo": "cashback",
+        "rotulo": "Cashback",
+        "conversas": 15,
+        "sugestao": "Regras de cashback e consulta de saldo acessíveis ao agente."
+      },
+      {
+        "motivo": "frete_gratis",
+        "rotulo": "Frete grátis não aplicado",
+        "conversas": 6,
+        "sugestao": "Regra de frete grátis acessível ao agente, com estorno automático da diferença."
+      }
     ]
   }
 }
