@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agente de Atendimento</title>
+<title>Agente de Atendimento · Testar o Agente</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -41,14 +41,14 @@
   --shadow: none; color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; overflow-x: hidden; }
 body {
   background: var(--bg); color: var(--fg);
   font: 15px/1.55 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 22px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 24px 64px; display: grid; gap: 22px; min-width: 0; }
 h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
 h1 { font-size: 1.65rem; font-weight: 700; letter-spacing: -.01em; }
 h2 { font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -56,25 +56,53 @@ p { margin: 0; }
 .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; }
 .muted { color: var(--muted); }
 
+/* barra superior e navegação */
+.topbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.nav-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border: 1px solid var(--line);
+            border-radius: 999px; padding: 4px; box-shadow: var(--shadow); }
+.nav-tab { text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 600;
+           padding: 6px 14px; border-radius: 999px; transition: all .15s ease; }
+.nav-tab:hover { color: var(--fg); }
+.nav-tab.ativo { background: var(--accent); color: var(--accent-fg); }
+.acoes-topo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn-topo { font: inherit; font-size: .8rem; font-weight: 500; color: var(--muted); background: var(--surface);
+            border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-topo:hover { color: var(--fg); border-color: var(--accent); }
+
 header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
-header .sub { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+header .sub { color: var(--muted); max-width: 68ch; margin-top: 6px; }
 .tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
        background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 600; }
 
+/* guia rápido de 10 segundos */
+.intro-box { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+             border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow); display: flex;
+             flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; font-size: .86rem; }
+.intro-box .passos-intro { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); }
+.intro-box .passos-intro span b { color: var(--fg); }
+.intro-box a { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.intro-box a:hover { text-decoration: underline; }
+
 /* trilha do grafo */
 .grafo { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
-         box-shadow: var(--shadow); }
+         box-shadow: var(--shadow); display: grid; gap: 8px; }
+.grafo-cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; font-size: .76rem; color: var(--muted); }
 .nos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px; }
 .fork { display: grid; gap: 4px; }
 .no { display: flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 9px; font-size: .8rem;
       font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--faint);
       border: 1px dashed var(--line); background: transparent; transition: all .25s ease; }
-.no .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.no .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: all .25s ease; }
 .no.on { color: var(--fg); border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
 .no.on .pt { background: var(--accent); }
-.no.fim-auto { border-color: var(--auto); background: var(--auto-soft); color: var(--auto); }
+.no.ativo-agora { color: var(--fg); border-style: solid; border-color: var(--accent); background: var(--accent-soft);
+                  box-shadow: 0 0 0 3px var(--accent-soft); transform: translateY(-1px); }
+.no.ativo-agora .pt { background: var(--accent); animation: pulsar .9s infinite ease-in-out; }
+@keyframes pulsar { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.45); opacity: .55; } }
+.no.fim-auto { border-style: solid; border-color: var(--auto); background: var(--auto-soft); color: var(--auto); }
 .no.fim-auto .pt { background: var(--auto); }
-.no.fim-hum { border-color: var(--human); background: var(--human-soft); color: var(--human); }
+.no.fim-hum { border-style: solid; border-color: var(--human); background: var(--human-soft); color: var(--human); }
 .no.fim-hum .pt { background: var(--human); }
 .seta { color: var(--faint); font-size: .8rem; }
 
@@ -83,6 +111,7 @@ header .sub { color: var(--muted); max-width: 62ch; margin-top: 6px; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
         box-shadow: var(--shadow); display: grid; gap: 14px; min-width: 0; align-content: start; }
+@media (max-width: 520px) { .card { padding: 15px 14px; } }
 
 /* formulário */
 form { display: grid; gap: 18px; }
@@ -100,7 +129,8 @@ textarea, input, select {
 textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
 textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
 fieldset { border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px 14px; margin: 0;
-           display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+           display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+@media (max-width: 440px) { fieldset { grid-template-columns: minmax(0, 1fr); } }
 legend { padding: 0 6px; font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 fieldset .dica { grid-column: 1 / -1; font-size: .78rem; color: var(--faint); }
 .check { display: flex; gap: 9px; align-items: start; font-size: .85rem; color: var(--fg); font-weight: 400; }
@@ -159,7 +189,12 @@ button.principal:disabled { opacity: .55; cursor: wait; }
 .eleg ul { margin: 2px 0 0; padding-left: 18px; color: var(--muted); font-size: .84rem; }
 
 .bolha { background: var(--surface-2); border-radius: 4px 14px 14px 14px; padding: 14px 16px; white-space: pre-wrap;
-         font-size: .93rem; max-width: 62ch; }
+         font-size: .93rem; max-width: 62ch; border: 1px solid var(--line); }
+.comparacao-redacao { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 720px) { .comparacao-redacao { grid-template-columns: minmax(0, 1fr); } }
+.col-redacao { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.col-redacao .cab-red { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: .78rem; font-weight: 600; color: var(--muted); }
+
 .dossie { display: grid; gap: 10px; font-size: .88rem; }
 .dossie .linha { display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; }
 @media (max-width: 520px) { .dossie .linha { grid-template-columns: 1fr; gap: 2px; } }
@@ -214,11 +249,24 @@ button.principal:disabled { opacity: .55; cursor: wait; }
 .opcao { border: 1px dashed var(--line); border-radius: 8px; padding: 4px 9px; font-size: .76rem; color: var(--faint); }
 .opcao.escolhida { border-style: solid; border-color: var(--accent); background: var(--accent-soft); color: var(--fg); font-weight: 600; }
 
-footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
+footer { color: var(--faint); font-size: .8rem; display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 18px; }
+footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <nav class="topbar" aria-label="Navegação principal">
+    <div class="nav-tabs">
+      <a class="nav-tab" href="diagnostico.html">Diagnóstico</a>
+      <a class="nav-tab ativo" href="index.html" aria-current="page">Testar o agente</a>
+    </div>
+    <div class="acoes-topo">
+      <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Repositório GitHub ↗</a>
+      <button type="button" class="btn-topo" id="btn-tema" aria-label="Alternar tema claro ou escuro">Tema</button>
+    </div>
+  </nav>
+
   <header>
     <div>
       <span class="tag">Desafio AI-First · Problema 1</span>
@@ -228,7 +276,20 @@ footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
     </div>
   </header>
 
+  <div class="intro-box" aria-label="Como testar em 10 segundos">
+    <div class="passos-intro">
+      <span><b>Em 10s:</b> 1. Clique num exemplo (ou digite uma mensagem com CPF/pedido).</span>
+      <span>2. Veja o grafo decidir entre <b>resposta automática</b> e <b>dossiê humano</b> (ex.: saúde ou Reclame Aqui).</span>
+      <span>3. Marque <i>Reescrever com LLM</i> para comparar template × IA lado a lado.</span>
+    </div>
+    <a href="diagnostico.html">Ver números e diagnóstico completo →</a>
+  </div>
+
   <div class="grafo" aria-label="Caminho no grafo">
+    <div class="grafo-cab">
+      <span>Fluxo de execução do grafo LangGraph</span>
+      <span id="status-grafo" class="mono">Aguardando envio</span>
+    </div>
     <div class="nos" id="nos"></div>
   </div>
 
@@ -236,7 +297,7 @@ footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
     <div class="card">
       <form id="form">
         <div style="display:grid;gap:8px">
-          <h2>Exemplos</h2>
+          <h2>Exemplos rápidos</h2>
           <div class="chips" id="exemplos"></div>
         </div>
 
@@ -274,7 +335,7 @@ footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
 
         <label class="check"><input type="checkbox" id="redacao">
           <span>Reescrever a resposta com LLM
-            <small>O texto passa por checagens; se prometer algo não decidido, volta o template.</small></span>
+            <small>Compara o template determinístico e a redação via LLM lado a lado; se prometer algo não decidido, volta o template.</small></span>
         </label>
 
         <button class="principal" id="enviar" type="submit">Atender</button>
@@ -289,10 +350,10 @@ footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
           <li><b>Prioridade</b>: score de 0 a 100 e quanto cada fator pesou.</li>
           <li><b>Elegibilidade</b>: cada motivo comparado à política da empresa.</li>
           <li><b>Decisão</b>: automático ou humano, e qual fila (no topo do resultado).</li>
-          <li><b>Ação</b>: a resposta que o cliente receberia, ou o dossiê para o atendente.</li>
+          <li><b>Ação</b>: a resposta que o cliente receberia (template × LLM), ou o dossiê para o atendente.</li>
           <li><b>Passo a passo</b> (no fim da página): cada etapa do grafo, o que ela perguntou e o que concluiu.</li>
         </ol>
-        <p>Escolha um exemplo ou escreva a sua mensagem.</p>
+        <p>Escolha um exemplo ao lado ou escreva a sua mensagem.</p>
       </div>
     </section>
   </div>
@@ -302,7 +363,7 @@ footer { color: var(--faint); font-size: .8rem; display: grid; gap: 4px; }
   <footer>
     <p>Só a classificação (e a redação, se marcada) usa LLM. Prioridade, elegibilidade e decisão são regras
       determinísticas, para que dinheiro e saúde nunca dependam de um modelo.</p>
-    <p>CPF, cartão, telefone e e-mail são mascarados antes de qualquer envio ao LLM.</p>
+    <p>CPF, cartão, telefone e e-mail são mascarados antes de qualquer envio ao LLM · <a href="diagnostico.html">Ver Diagnóstico com números agregados →</a> · <a href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Repositório no GitHub ↗</a></p>
   </footer>
 </div>
 
@@ -321,7 +382,7 @@ const $ = (id) => document.getElementById(id);
 function h(tag, attrs = {}, ...filhos) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
-    if (k === "class") el.className = v; else if (k === "style") el.style.cssText = v; else el.setAttribute(k, v);
+    if (k === "class") el.className = v; else if (k === "style") el.style.cssText = v; else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
   }
   for (const f of filhos.flat()) if (f !== null && f !== undefined && f !== false)
     el.append(f instanceof Node ? f : document.createTextNode(String(f)));
@@ -330,11 +391,36 @@ function h(tag, attrs = {}, ...filhos) {
 const rotulo = (s) => (s || "").replaceAll("_", " ");
 const brl = (v) => v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-function desenharNos(caminho = [], modo = null) {
+/* Alternância de tema claro/escuro persistida */
+function iniciarTema() {
+  const salvo = localStorage.getItem("tema");
+  if (salvo === "light" || salvo === "dark") {
+    document.documentElement.setAttribute("data-theme", salvo);
+  }
+  const atualizarBotao = () => {
+    const atual = document.documentElement.getAttribute("data-theme");
+    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const escuro = atual ? atual === "dark" : escuroSistema;
+    $("btn-tema").textContent = escuro ? "☀ Tema claro" : "☾ Tema escuro";
+  };
+  atualizarBotao();
+  $("btn-tema").addEventListener("click", () => {
+    const atual = document.documentElement.getAttribute("data-theme");
+    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const escuro = atual ? atual === "dark" : escuroSistema;
+    const novo = escuro ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", novo);
+    localStorage.setItem("tema", novo);
+    atualizarBotao();
+  });
+}
+
+function desenharNos(caminho = [], modo = null, noAtivo = null) {
   const alvo = $("nos"); alvo.replaceChildren();
   const no = (n) => {
     let cls = "no";
     if (caminho.includes(n)) cls += n === "agir" ? " fim-auto" : n === "escalar_humano" ? " fim-hum" : " on";
+    if (n === noAtivo) cls += " ativo-agora";
     return h("div", { class: cls }, h("span", { class: "pt" }), n);
   };
   NOS.slice(0, 7).forEach(n => alvo.append(no(n), h("span", { class: "seta" }, "→")));
@@ -342,8 +428,107 @@ function desenharNos(caminho = [], modo = null) {
   alvo.append(h("div", { class: "fork" }, no("agir"), no("escalar_humano")));
 }
 
+let timerAnimacao = null;
+function iniciarAnimacaoNos() {
+  pararAnimacaoNos();
+  const sequencia = NOS.slice(0, 7);
+  let idx = 0;
+  const passo = () => {
+    const visitados = sequencia.slice(0, idx + 1);
+    const atual = sequencia[idx];
+    desenharNos(visitados, null, atual);
+    $("status-grafo").textContent = `Executando: ${atual}…`;
+    if (idx < sequencia.length - 1) idx++;
+  };
+  passo();
+  timerAnimacao = setInterval(passo, 220);
+}
+
+function pararAnimacaoNos(textoStatus = "Fluxo concluído") {
+  if (timerAnimacao) {
+    clearInterval(timerAnimacao);
+    timerAnimacao = null;
+  }
+  $("status-grafo").textContent = textoStatus;
+}
+
+/* Gerador determinístico de rascunho em JS (espelha servicos/respostas.py) para comparar lado a lado quando a API não enviar resposta_template */
+const ROTULO_MOTIVO_TPL = {
+  rastreio_status: "o status da entrega", atraso: "o atraso na entrega",
+  extravio: "a entrega não localizada", entrega_divergente: "a entrega marcada como concluída",
+  alteracao_endereco: "a alteração de endereço", avaria: "o item que chegou danificado",
+  item_faltante: "o item faltante no pedido", item_errado: "o item enviado diferente do pedido",
+  brinde_faltante: "o brinde da promoção", arrependimento: "o cancelamento da compra",
+  troca_fragrancia: "a troca de fragrância", troca_outros: "a troca do produto",
+  cobranca_duplicada: "a cobrança em duplicidade", reembolso_status: "o status do reembolso",
+  pagamento_nao_confirmado: "a confirmação do pagamento", nota_fiscal: "a segunda via da nota fiscal",
+  cupom_promocao_nao_aplicou: "o desconto na compra",
+  reacao_adversa: "a reação que você teve com o produto", duvida_saude: "sua dúvida sobre o uso do produto",
+  duvida_produto: "sua dúvida sobre o produto", insatisfacao_produto: "seu relato sobre o produto",
+  elogio: "sua mensagem", problema_acesso_cadastro: "o acesso ao seu cadastro",
+};
+const TEXTO_STATUS_TPL = {
+  aguardando_pagamento: "aguardando a confirmação do pagamento",
+  em_separacao: "em separação no nosso estoque e será enviado em breve",
+  em_transito: "em trânsito com a transportadora",
+  atrasado: "em trânsito, com atraso em relação ao prazo previsto",
+  entregue: "registrado como entregue pela transportadora",
+};
+
+function redigirTemplateLocal(d, marca) {
+  if (!d || d.modo !== "automatico" || !Array.isArray(d.acoes) || !d.acoes.length) return null;
+  const paragrafos = [];
+  const vistos = new Set();
+  for (const a of d.acoes) {
+    const p = a.parametros || {};
+    const ass = ROTULO_MOTIVO_TPL[a.motivo] || rotulo(a.motivo);
+    const val = p.valor != null ? brl(Number(p.valor)) : null;
+    let txt = "";
+    if (a.tipo === "solicitar_informacoes") {
+      const itens = (p.solicitar || []).join(", ") || "o número do pedido ou o CPF da compra";
+      txt = `Sobre ${ass}: para seguirmos com a verificação, envie por aqui ${itens}.`;
+    } else if (a.tipo === "informar_status") {
+      const desc = TEXTO_STATUS_TPL[p.status_entrega] || "em processamento";
+      txt = `Sobre ${ass}: consultamos o seu pedido e ele está ${desc}. Assim que houver nova movimentação, atualizamos você por aqui.`;
+    } else if (a.tipo === "abrir_chamado_transportadora") {
+      if (a.motivo === "atraso") txt = "Sobre o atraso na entrega: abrimos uma verificação prioritária com a transportadora e retornamos com a posição atualizada em até 48 horas úteis.";
+      else if (a.motivo === "entrega_divergente") txt = "Sobre a entrega marcada como concluída: abrimos uma acareação com a transportadora para confirmar quem recebeu. Se a entrega não for comprovada em até 5 dias úteis, faremos o reenvio sem custo ou o reembolso integral.";
+      else txt = "Sobre a entrega não localizada: acionamos a transportadora para confirmar a ocorrência e seguir com o reenvio sem custo ou o reembolso integral.";
+    } else if (a.tipo === "alterar_endereco") {
+      txt = "Sobre a alteração de endereço: como o pedido ainda não saiu para transporte, atualizamos o endereço de entrega no pedido.";
+    } else if (a.tipo === "reenvio_sem_custo") {
+      txt = `Sobre ${ass}: registramos o reenvio do item sem custo adicional. Você receberá o novo código de rastreio assim que ele sair do nosso estoque.`;
+    } else if (a.tipo === "nova_producao") {
+      txt = `Sobre ${ass}: como se trata de um item personalizado, já enviamos uma nova peça para produção sem custo adicional e avisaremos assim que for despachada.`;
+    } else if (a.tipo === "reembolso_integral") {
+      const trechoVal = val ? ` no valor de ${val}` : "";
+      if (a.motivo === "arrependimento") txt = `Sobre o cancelamento por arrependimento: registramos o reembolso integral${trechoVal} e enviamos as instruções de postagem reversa gratuita.`;
+      else txt = `Sobre ${ass}: registramos o reembolso integral${trechoVal}, que será processado na mesma forma de pagamento do pedido.`;
+    } else if (a.tipo === "estorno") {
+      const trechoVal = val ? ` de ${val}` : "";
+      txt = `Sobre a cobrança em duplicidade: solicitamos o estorno${trechoVal}. Em cartão de crédito ele aparece em até 2 faturas; no Pix, em até 5 dias úteis.`;
+    } else if (a.tipo === "informar_inelegibilidade") {
+      if (a.motivo === "alteracao_endereco") txt = "Sobre a alteração de endereço: como o pedido já saiu para transporte, não conseguimos mudar o endereço nesta entrega. Caso o pacote retorne ao nosso estoque, faremos o reenvio para o novo endereço.";
+      else if (a.motivo === "arrependimento") txt = "Sobre o cancelamento por arrependimento: pelo Código de Defesa do Consumidor, o prazo é de 7 dias corridos após o recebimento, por isso não é mais possível cancelar por essa modalidade.";
+      else if (a.motivo === "troca_fragrancia") txt = "Sobre a troca de fragrância: a política vale até 15 dias após o recebimento com o frasco em pelo menos 80% da capacidade, então este pedido não se enquadra mais no prazo.";
+      else txt = `Sobre ${ass}: conferimos o pedido e, pelas condições de prazo da nossa política, não é possível atender a essa solicitação automaticamente.`;
+    } else if (a.tipo === "agradecer") {
+      txt = "Ficamos muito felizes com o seu retorno! Agradecemos a confiança e compartilhamos o seu elogio com a equipe.";
+    } else {
+      txt = `Sobre ${ass}: registramos a sua solicitação (${rotulo(a.tipo)}).`;
+    }
+    if (!vistos.has(txt)) {
+      vistos.add(txt);
+      paragrafos.push(txt);
+    }
+  }
+  const saudacao = `Olá! Agradecemos o contato com a ${marca || "nossa equipe"}.`;
+  return [saudacao, ...paragrafos, `Qualquer dúvida, seguimos à disposição.\nEquipe ${marca || "Atendimento"}`].join("\n\n");
+}
+
 let exemplos = [];
 async function iniciar() {
+  iniciarTema();
   desenharNos();
   try {
     const [ex, op] = await Promise.all([fetch("/api/exemplos").then(r => r.json()), fetch("/api/opcoes").then(r => r.json())]);
@@ -371,19 +556,24 @@ $("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const mensagens = $("mensagens").value.split("\n").map(s => s.trim()).filter(Boolean).slice(0, 5);
   if (!mensagens.length) return;
+  const pediuRedacaoLlm = $("redacao").checked;
+  const marcaEscolhida = $("marca").value;
   const corpo = {
-    mensagens, redacao_llm: $("redacao").checked,
-    pedido: { canal: $("canal").value, marca: $("marca").value, status_entrega: $("status").value || null,
+    mensagens, redacao_llm: pediuRedacaoLlm,
+    pedido: { canal: $("canal").value, marca: marcaEscolhida, status_entrega: $("status").value || null,
               dias_desde_pedido: numero("dias"), valor: numero("valor"), contatos_anteriores_pedido: numero("contatos") || 0 },
   };
   const btn = $("enviar"); btn.disabled = true; btn.textContent = "Atendendo…";
-  desenharNos();
+  iniciarAnimacaoNos();
   try {
     const r = await fetch("/api/atender", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
     const dados = await r.json();
     if (!r.ok) throw new Error(typeof dados.detail === "string" ? dados.detail : (dados.detail || []).map(d => d.msg).join("; "));
-    mostrar(dados);
+    pararAnimacaoNos(`Concluído (${dados.caminho.length} etapas)`);
+    mostrar(dados, { pediuRedacaoLlm, marcaEscolhida });
   } catch (e) {
+    pararAnimacaoNos("Erro ao processar");
+    desenharNos();
     $("resultado").replaceChildren(h("div", { class: "erro" }, "Não foi possível atender: " + e.message));
     $("trilha").hidden = true;
   } finally { btn.disabled = false; btn.textContent = "Atender"; }
@@ -446,11 +636,33 @@ function listaAcoes(acoes) {
     h("span", { class: "pill " + (a.modo === "automatico" ? "ok" : "hum") }, a.modo === "automatico" ? "automático" : "humano"))));
 }
 
-function blocoAcao(d, a) {
+function blocoAcao(d, a, opcoes = {}) {
   if (!d || !a) return null;
   if (a.destino === "automatico") {
+    const tpl = a.resposta_template || (opcoes.pediuRedacaoLlm ? redigirTemplateLocal(d, opcoes.marcaEscolhida) : null);
+    const mostrarLadoALado = opcoes.pediuRedacaoLlm && tpl;
+
+    const conteudoResposta = mostrarLadoALado
+      ? h("div", { class: "comparacao-redacao" },
+          h("div", { class: "col-redacao" },
+            h("div", { class: "cab-red" },
+              h("span", {}, "Template determinístico"),
+              h("span", { class: "tipo regra" }, "regra")
+            ),
+            h("div", { class: "bolha" }, tpl)
+          ),
+          h("div", { class: "col-redacao" },
+            h("div", { class: "cab-red" },
+              h("span", {}, "Redação final enviada"),
+              h("span", { class: "tipo " + (a.origem_resposta === "llm" ? "llm" : "regra") }, a.origem_resposta || "template")
+            ),
+            h("div", { class: "bolha" }, a.resposta_cliente)
+          )
+        )
+      : h("div", { class: "bolha" }, a.resposta_cliente);
+
     return card("4 · Resposta ao cliente",
-      h("div", { class: "bolha" }, a.resposta_cliente),
+      conteudoResposta,
       h("p", { class: "muted mono" }, "redigida via " + (a.origem_resposta || "template")),
       h("h2", {}, "Ações registradas"), listaAcoes(d.acoes));
   }
@@ -571,13 +783,13 @@ function blocoTrilha(r) {
     trilho);
 }
 
-function mostrar(r) {
+function mostrar(r, opcoes = {}) {
   desenharNos(r.caminho, r.decisao?.modo);
   const filhos = [veredito(r.decisao)];
   if (r.classificacao) filhos.push(blocoClassificacao(r.classificacao));
   if (r.prioridade || r.elegibilidade)
     filhos.push(h("div", { class: "dupla" }, r.prioridade ? blocoPrioridade(r.prioridade) : null, r.elegibilidade ? blocoElegibilidade(r.elegibilidade) : null));
-  filhos.push(blocoAcao(r.decisao, r.acao));
+  filhos.push(blocoAcao(r.decisao, r.acao, opcoes));
   $("resultado").replaceChildren(...filhos.filter(Boolean));
   $("trilha").replaceChildren(blocoTrilha(r)); $("trilha").hidden = false;
   if (window.innerWidth < 900) $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
