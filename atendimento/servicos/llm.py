@@ -12,11 +12,27 @@ def provedor(modelo: str) -> str:
     return "google" if modelo.startswith(("gemini", "gemma")) else "groq"
 
 
+class ChaveAusente(RuntimeError):
+    """A variável de ambiente com a chave do provedor não está definida (ex.: faltou cadastrar na Vercel)."""
+
+    def __init__(self, variavel: str):
+        self.variavel = variavel
+        super().__init__(f"variável de ambiente {variavel} não configurada")
+
+
+def _chave(variavel: str) -> str:
+    valor = os.environ.get(variavel, "").strip()
+    if not valor:
+        raise ChaveAusente(variavel)
+    return valor
+
+
 def criar_chat(modelo: str, temperatura: float = 0, max_retries: int = 0):
     if provedor(modelo) == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
         return ChatGoogleGenerativeAI(model=modelo, temperature=temperatura, max_retries=max_retries,
-                                      google_api_key=os.environ["GEMINI_API_KEY"])
+                                      google_api_key=_chave("GEMINI_API_KEY"))
+    _chave("GROQ_API_KEY")  # o ChatGroq lê a variável sozinho; checamos antes para dar erro claro
     from langchain_groq import ChatGroq
     extra = {"reasoning_effort": "low"} if "gpt-oss" in modelo else {}
     return ChatGroq(model=modelo, temperature=temperatura, max_retries=max_retries, **extra)

@@ -100,3 +100,13 @@ def test_serve_arquivos_publicos(cliente):
     assert cliente.get("/diagnostico.json").json()["totais"]["conversas"] > 0
     assert cliente.get("/api/opcoes").status_code == 200  # rotas da API continuam tendo precedência
     assert cliente.get("/nao-existe.html").status_code == 404
+
+
+def test_chave_ausente_vira_mensagem_clara(cliente, monkeypatch):
+    from atendimento.servicos.llm import ChaveAusente
+
+    def sem_chave(msgs):
+        raise ChaveAusente("GEMINI_API_KEY")
+    monkeypatch.setattr(no_classificar, "classificar_conversa", sem_chave)
+    r = cliente.post("/api/atender", json={"mensagens": ["oi"], "pedido": _pedido()})
+    assert r.status_code == 503 and "GEMINI_API_KEY" in r.json()["detail"]
