@@ -150,6 +150,9 @@ os clientes nos procuram, nem do que fazer a respeito."*
 
 ### Orquestração entre agentes
 
+**Plano detalhado do trabalho em paralelo (Claude Code + Antigravity): [`docs/plano-paralelo.md`](docs/plano-paralelo.md).**
+Lá estão a divisão de arquivos, as fases e o contrato do `public/diagnostico.json`.
+
 - Uma branch por tarefa, cada uma vira PR; o Caio faz o merge (push na `main` publica na Vercel).
 - Tarefas que não tocam os mesmos arquivos podem rodar em paralelo: frontend (`public/`) e backend
   (`servicos/`, `grafo/`, `tests/`). O README entra por último, descrevendo o que ficou pronto.

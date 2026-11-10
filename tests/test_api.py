@@ -93,3 +93,10 @@ def test_validacao_e_limite(cliente, monkeypatch):
 def test_exemplos_e_pagina(cliente):
     assert len(cliente.get("/api/exemplos").json()) >= 5
     assert "Agente de Atendimento" in cliente.get("/").text
+
+
+def test_serve_arquivos_publicos(cliente):
+    """Localmente o FastAPI serve public/ como a Vercel: páginas e o JSON do diagnóstico."""
+    assert cliente.get("/diagnostico.json").json()["totais"]["conversas"] > 0
+    assert cliente.get("/api/opcoes").status_code == 200  # rotas da API continuam tendo precedência
+    assert cliente.get("/nao-existe.html").status_code == 404
