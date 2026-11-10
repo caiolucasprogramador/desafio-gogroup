@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico do Atendimento · Desafio AI-First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f4f8; --surface: #ffffff; --surface-2: #f0edf4; --line: #e2dde9;
+  --fg: #1d1823; --muted: #6b6475; --faint: #9a93a5;
+  --accent: #6d3fc0; --accent-soft: #ece4fa; --accent-fg: #ffffff;
+  --auto: #1f7a55; --auto-soft: #def3e9;
+  --human: #b4561b; --human-soft: #fbe9dc;
+  --warn: #8a6a00; --warn-soft: #f8f0cf;
+  --bad: #b3263a; --bad-soft: #fbe2e6;
+  --f1: #6d3fc0; --f2: #2f7fb5; --f3: #1f9a8a; --f4: #c9821b; --f5: #b84a7a; --f6: #7d8590;
+  --shadow: 0 1px 2px rgba(40, 20, 70, .06), 0 4px 16px rgba(40, 20, 70, .05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
+    --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
+    --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+    --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+    --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+    --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+    --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
+  --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
+  --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+  --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+  --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+  --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+  --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: hidden; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.55 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 24px 64px; display: grid; gap: 22px; min-width: 0; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.25; }
+h1 { font-size: 1.65rem; font-weight: 700; letter-spacing: -.01em; }
+h2.eyebrow { font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h2.pergunta { font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; color: var(--fg); }
+h3 { font-size: .88rem; font-weight: 600; color: var(--muted); }
+p { margin: 0; }
+.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* barra superior e navegação */
+.topbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.nav-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border: 1px solid var(--line);
+            border-radius: 999px; padding: 4px; box-shadow: var(--shadow); }
+.nav-tab { text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 600;
+           padding: 6px 14px; border-radius: 999px; transition: all .15s ease; }
+.nav-tab:hover { color: var(--fg); }
+.nav-tab.ativo { background: var(--accent); color: var(--accent-fg); }
+.acoes-topo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn-topo { font: inherit; font-size: .8rem; font-weight: 500; color: var(--muted); background: var(--surface);
+            border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-topo:hover { color: var(--fg); border-color: var(--accent); }
+
+/* faixa discreta de dados de exemplo */
+.faixa-exemplo { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
+                 border-radius: 10px; padding: 8px 14px; font-size: .82rem; display: flex;
+                 flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+.faixa-exemplo b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: .74rem; }
+
+header { display: grid; gap: 8px; }
+header .sub { color: var(--muted); max-width: 78ch; font-size: .98rem; line-height: 1.55; }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+       background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 600; width: fit-content; }
+
+/* cards de KPIs no topo */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 920px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+       box-shadow: var(--shadow); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.kpi .rotulo { font-size: .76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.kpi .valor { font-size: 1.85rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi .valor.destaque-acc { color: var(--accent); }
+.kpi .valor.destaque-auto { color: var(--auto); }
+.kpi .detalhe { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+        box-shadow: var(--shadow); display: grid; gap: 16px; min-width: 0; align-content: start; }
+@media (max-width: 520px) { .card { padding: 16px 14px; } }
+.secao-topo { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; justify-content: space-between; }
+.secao-topo .num-pergunta { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+                            color: var(--accent); display: block; margin-bottom: 4px; }
+.secao-sub { color: var(--muted); font-size: .9rem; max-width: 75ch; }
+
+/* alternador e legenda em P1 */
+.controles-p1 { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.seg-group { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg-btn { font: inherit; font-size: .78rem; font-weight: 600; border: 0; background: transparent; color: var(--muted);
+           padding: 5px 11px; border-radius: 6px; cursor: pointer; }
+.seg-btn.ativo { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.legenda-barras { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .8rem; color: var(--muted); }
+.legenda-barras span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.dot.vol { background: var(--f2); }
+.dot.cus { background: var(--accent); }
+
+/* barras comparativas (% conversas vs % custo) */
+.lista-comparativa { display: grid; gap: 12px; min-width: 0; }
+.item-comp { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); min-width: 0; }
+.item-comp:last-child { border-bottom: 0; padding-bottom: 0; }
+.item-comp .cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
+.item-comp .nome { font-weight: 600; font-size: .92rem; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.item-comp .metricas { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.dupla-barra { display: grid; gap: 5px; }
+.linha-barra { display: grid; grid-template-columns: 4.6em 1fr 3.4em; gap: 8px; align-items: center; font-size: .76rem; }
+.linha-barra .rot { color: var(--muted); }
+.linha-barra .trilho-b { height: 9px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.linha-barra .preenchimento { height: 100%; border-radius: 999px; }
+.linha-barra .preenchimento.vol { background: var(--f2); }
+.linha-barra .preenchimento.cus { background: var(--accent); }
+.linha-barra .pct { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.pill { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+        letter-spacing: .02em; font-style: normal; font-family: "Instrument Sans", system-ui, sans-serif; }
+.pill.acc { background: var(--accent-soft); color: var(--accent); }
+.pill.ok { background: var(--auto-soft); color: var(--auto); }
+.pill.hum { background: var(--human-soft); color: var(--human); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.sp { background: var(--surface-2); color: var(--muted); }
+
+/* tabela de canais */
+.tabela-wrap { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: 11px; }
+table.canais { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums; }
+table.canais th, table.canais td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+table.canais th { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+table.canais tr:last-child td { border-bottom: 0; }
+table.canais td.dir, table.canais th.dir { text-align: right; }
+table.canais tr.destaque-ra { background: var(--human-soft); }
+@media (max-width: 520px) {
+  table.canais th, table.canais td { padding: 8px 8px; font-size: .78rem; }
+}
+
+/* P2: contatos evitáveis */
+.grade-evitaveis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 720px) { .grade-evitaveis { grid-template-columns: minmax(0, 1fr); } }
+.card-evitavel { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+                 display: grid; gap: 8px; align-content: start; min-width: 0; }
+.card-evitavel .topo-ev { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.card-evitavel .tit-ev { font-weight: 700; font-size: .96rem; }
+.card-evitavel .custo-ev { font-weight: 700; color: var(--human); font-variant-numeric: tabular-nums; font-size: .95rem; }
+.card-evitavel .acao-ev { font-size: .86rem; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
+
+/* P3: o que atacar primeiro */
+.criterio-box { background: var(--accent-soft); color: var(--fg); border-left: 4px solid var(--accent);
+                padding: 10px 14px; border-radius: 8px; font-size: .88rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.criterio-box b { color: var(--accent); text-transform: uppercase; font-size: .74rem; letter-spacing: .06em; margin-right: 4px; }
+.lista-rank { display: grid; gap: 10px; }
+.item-rank { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;
+             background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+@media (max-width: 560px) {
+  .item-rank { grid-template-columns: 32px 1fr; }
+  .item-rank .numeros-rank { grid-column: 2; justify-self: start; }
+}
+.bola-rank { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-fg);
+             font-weight: 700; font-size: .9rem; display: grid; place-items: center; flex: none; }
+.corpo-rank { display: grid; gap: 3px; min-width: 0; }
+.corpo-rank .foco { font-weight: 700; font-size: .96rem; }
+.corpo-rank .porque { font-size: .85rem; color: var(--muted); }
+.numeros-rank { text-align: right; font-variant-numeric: tabular-nums; display: grid; gap: 2px; }
+@media (max-width: 560px) { .numeros-rank { text-align: left; display: flex; gap: 10px; align-items: baseline; } }
+.numeros-rank .custo { font-weight: 700; font-size: .95rem; }
+.numeros-rank .conv { font-size: .78rem; color: var(--muted); }
+
+/* P4: sozinho vs pessoa */
+.barra-divisao { display: grid; gap: 8px; }
+.barra-divisao .rotulos-div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: .9rem; font-weight: 600; }
+.barra-divisao .rot-auto { color: var(--auto); }
+.barra-divisao .rot-hum { color: var(--human); }
+.trilho-div { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: var(--surface-2); gap: 3px; }
+.trilho-div .seg-auto { background: var(--auto); height: 100%; }
+.trilho-div .seg-hum { background: var(--human); height: 100%; }
+.nota-resolucao { font-size: .84rem; color: var(--muted); }
+
+.colunas-p4 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 960px) { .colunas-p4 { grid-template-columns: minmax(0, 1fr); } }
+.bloco-p4 { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+            display: grid; gap: 10px; align-content: start; min-width: 0; }
+.lista-simples { display: grid; gap: 8px; font-size: .86rem; }
+.linha-simples { display: grid; gap: 4px; padding-bottom: 7px; border-bottom: 1px dashed var(--line); }
+.linha-simples:last-child { border-bottom: 0; padding-bottom: 0; }
+.linha-simples .topo-s { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.linha-simples .rot-s { font-weight: 500; }
+.linha-simples .val-s { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.linha-simples .sug-s { font-size: .8rem; color: var(--muted); }
+
+.erro { background: var(--bad-soft); color: var(--bad); border-radius: 11px; padding: 14px 16px; }
+
+footer { color: var(--faint); font-size: .82rem; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar" aria-label="Navegação principal">
+    <div class="nav-tabs">
+      <a class="nav-tab ativo" href="diagnostico.html" aria-current="page">Diagnóstico</a>
+      <a class="nav-tab" href="index.html">Testar o agente</a>
+    </div>
+    <div class="acoes-topo">
+      <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Repositório GitHub ↗</a>
+      <button type="button" class="btn-topo" id="btn-tema" aria-label="Alternar tema claro ou escuro">Tema</button>
+    </div>
+  </nav>
+
+  <div id="aviso-exemplo" class="faixa-exemplo" hidden>
+    <span><b>Dados de exemplo</b> · Os valores exibidos abaixo seguem o contrato de demonstração e serão substituídos pelos agregados finais.</span>
+    <span class="mono" id="meta-exemplo"></span>
+  </div>
+
+  <header>
+    <span class="tag">Desafio AI-First · Problema 1 · Visão da Liderança</span>
+    <h1>Diagnóstico do Atendimento</h1>
+    <p class="sub" id="frase-tese">Carregando diagnóstico das conversas de atendimento…</p>
+    <p class="muted" id="nota-amostra" style="font-size:.82rem"></p>
+  </header>
+
+  <section id="kpis" class="kpis" aria-label="Indicadores principais"></section>
+
+  <main id="conteudo" style="display:grid;gap:22px;min-width:0"></main>
+
+  <footer id="rodape">
+    <p id="obs-classificacao"></p>
+    <p>Outras limitações conhecidas: ausência de data de recebimento nas transportadoras (usamos janela segura da compra), cálculo de SLA em horas corridas e pesos de priorização definidos por regra de negócio.</p>
+    <p>Dados agregados, sem nenhum texto de conversa, CPF, pedido ou identificador de cliente · <a href="index.html">Testar o agente ao vivo →</a> · <a href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Código no GitHub ↗</a></p>
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs = {}, ...filhos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.style.cssText = v;
+    else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
+  }
+  for (const f of filhos.flat()) {
+    if (f !== null && f !== undefined && f !== false) {
+      el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+    }
+  }
+  return el;
+}
+
+const intBR = (v) => v == null ? "—" : Number(v).toLocaleString("pt-BR");
+const brl = (v, centavos = false) => v == null ? "—" : Number(v).toLocaleString("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: centavos ? 2 : 0,
+  maximumFractionDigits: centavos ? 2 : 0,
+});
+const pct = (v, casas = 0) => v == null ? "—" : (Number(v) * 100).toLocaleString("pt-BR", {
+  minimumFractionDigits: casas,
+  maximumFractionDigits: casas,
+}) + "%";
+
+/* Alternância de tema claro/escuro persistida */
+function iniciarTema() {
+  const salvo = localStorage.getItem("tema");
+  if (salvo === "light" || salvo === "dark") {
+    document.documentElement.setAttribute("data-theme", salvo);
+  }
+  const atualizarBotao = () => {
+    const atual = document.documentElement.getAttribute("data-theme");
+    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const escuro = atual ? atual === "dark" : escuroSistema;
+    $("btn-tema").textContent = escuro ? "☀ Tema claro" : "☾ Tema escuro";
+  };
+  atualizarBotao();
+  $("btn-tema").addEventListener("click", () => {
+    const atual = document.documentElement.getAttribute("data-theme");
+    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const escuro = atual ? atual === "dark" : escuroSistema;
+    const novo = escuro ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", novo);
+    localStorage.setItem("tema", novo);
+    atualizarBotao();
+  });
+}
+
+function renderizarTopo(d) {
+  if (d.exemplo === true) {
+    $("aviso-exemplo").hidden = false;
+    $("meta-exemplo").textContent = d.gerado_em ? `gerado em ${d.gerado_em}` : "";
+  }
+
+  const tot = d.totais || {};
+  const cls = d.classificacao || {};
+  const p4 = d.p4_sozinho_ou_pessoa || {};
+  const p1 = d.p1_por_que_procuram || {};
+  const ra = (p1.canais || []).find(c => c.canal === "reclame_aqui");
+  const pctAuto = p4.fila_avaliada ? p4.automatico / p4.fila_avaliada : 0;
+
+  const fator = tot.fator_expansao ?? 3;
+  const convEstimadas = tot.conversas_estimadas ?? (tot.conversas != null ? tot.conversas * fator : null);
+  const notaAmostra = `Amostra de 1 em cada ${intBR(fator)} clientes; números expandidos para a operação inteira (${intBR(tot.conversas)} conversas na amostra → ${intBR(convEstimadas)} estimadas).`;
+  $("nota-amostra").textContent = notaAmostra;
+
+  const trechoRA = ra
+    ? ` O Reclame Aqui representa apenas ${pct(ra.pct_conversas)} do volume, mas consome ${pct(ra.pct_custo)} de todo o custo (${brl(ra.custo)}).`
+    : "";
+  $("frase-tese").textContent =
+    `Em ${d.periodo?.dias || 90} dias, a operação soma cerca de ${intBR(convEstimadas)} conversas estimadas (${intBR(tot.marcas)} marcas) e um custo trimestral de ${brl(tot.custo_estimado)}.` +
+    trechoRA +
+    ` Com classificação por IA e decisão por regras determinísticas, ${pct(pctAuto)} da fila pode ser tratada automaticamente sem expor saúde ou dinheiro a alucinações.`;
+
+  const kpis = [
+    {
+      rotulo: `Conversas estimadas (${d.periodo?.dias || 90} dias)`,
+      valor: intBR(convEstimadas),
+      cls: "",
+      detalhe: `Amostra de 1 em cada ${intBR(fator)} clientes (${intBR(tot.conversas)} na amostra · ${intBR(tot.marcas)} marcas); números expandidos para a operação inteira`,
+    },
+    {
+      rotulo: "Custo trimestral estimado",
+      valor: brl(tot.custo_estimado),
+      cls: "",
+      detalhe: ra ? `Escala da operação inteira (${intBR(convEstimadas)} conversas) · Reclame Aqui = ${pct(ra.pct_custo)} do custo` : "Custo operacional na escala da operação inteira",
+    },
+    {
+      rotulo: "Potencial de automação",
+      valor: pct(pctAuto),
+      cls: "destaque-auto",
+      detalhe: `${intBR(p4.automatico)} de ${intBR(p4.fila_avaliada)} na fila da amostra (${pct(p4.resolucao_completa_pct)} resolução direta sem pedir dados)`,
+    },
+    {
+      rotulo: "Acerto na classificação",
+      valor: `${pct(cls.acerto_agente, 1)} vs ${pct(cls.acerto_tag_manual, 1)}`,
+      cls: "destaque-acc",
+      detalhe: `Agente (${cls.modelo || "LLM"}) contra tag manual · Saúde detectada: ${cls.saude_detectada || "—"}`,
+    },
+  ];
+
+  $("kpis").replaceChildren(...kpis.map(k =>
+    h("div", { class: "kpi" },
+      h("span", { class: "rotulo" }, k.rotulo),
+      h("span", { class: "valor " + k.cls }, k.valor),
+      h("span", { class: "detalhe" }, k.detalhe)
+    )
+  ));
+}
+
+function criarListaComparativa(itens, mostrarGravidade = false) {
+  const maxPct = Math.max(
+    ...itens.flatMap(i => [Number(i.pct_conversas) || 0, Number(i.pct_custo) || 0]),
+    0.01
+  );
+
+  return h("div", { class: "lista-comparativa" },
+    ...itens.map(item => {
+      const pVol = Number(item.pct_conversas) || 0;
+      const pCus = Number(item.pct_custo) || 0;
+      const largVol = Math.min(100, (pVol / maxPct) * 100);
+      const largCus = Math.min(100, (pCus / maxPct) * 100);
+
+      return h("div", { class: "item-comp" },
+        h("div", { class: "cab" },
+          h("span", { class: "nome" },
+            item.rotulo || item.motivo || item.categoria,
+            mostrarGravidade && item.gravidade != null
+              ? h("span", { class: "pill " + (item.gravidade >= 80 ? "hum" : "sp") }, `gravidade ${item.gravidade}`)
+              : null
+          ),
+          h("div", { class: "metricas" },
+            h("span", {}, `${intBR(item.conversas)} conv.`),
+            h("span", {}, "·"),
+            h("span", {}, brl(item.custo))
+          )
+        ),
+        h("div", { class: "dupla-barra" },
+          h("div", { class: "linha-barra" },
+            h("span", { class: "rot" }, "Conversas"),
+            h("div", { class: "trilho-b" }, h("div", { class: "preenchimento vol", style: `width:${largVol.toFixed(1)}%` })),
+            h("span", { class: "pct" }, pct(pVol, 1))
+          ),
+          h("div", { class: "linha-barra" },
+            h("span", { class: "rot" }, "Custo"),
+            h("div", { class: "trilho-b" }, h("div", { class: "preenchimento cus", style: `width:${largCus.toFixed(1)}%` })),
+            h("span", { class: "pct" }, pct(pCus, 1))
+          )
+        )
+      );
+    })
+  );
+}
+
+function secaoP1(p1) {
+  const categorias = p1?.categorias || [];
+  const motivos = p1?.motivos || [];
+  const canais = p1?.canais || [];
+
+  const containerGrafico = h("div", {});
+  const btnCat = h("button", { type: "button", class: "seg-btn ativo" }, `Por categoria (${categorias.length})`);
+  const btnMot = h("button", { type: "button", class: "seg-btn" }, `Por motivo (${motivos.length})`);
+
+  const mostrarCat = () => {
+    btnCat.classList.add("ativo");
+    btnMot.classList.remove("ativo");
+    containerGrafico.replaceChildren(criarListaComparativa(categorias, false));
+  };
+  const mostrarMot = () => {
+    btnMot.classList.add("ativo");
+    btnCat.classList.remove("ativo");
+    containerGrafico.replaceChildren(criarListaComparativa(motivos, true));
+  };
+
+  btnCat.addEventListener("click", mostrarCat);
+  btnMot.addEventListener("click", mostrarMot);
+  mostrarCat();
+
+  const tabelaCanais = h("div", { class: "tabela-wrap" },
+    h("table", { class: "canais" },
+      h("thead", {},
+        h("tr", {},
+          h("th", {}, "Canal"),
+          h("th", { class: "dir" }, "Conversas"),
+          h("th", { class: "dir" }, "% Volume"),
+          h("th", { class: "dir" }, "Custo unitário"),
+          h("th", { class: "dir" }, "Custo total"),
+          h("th", { class: "dir" }, "% Custo")
+        )
+      ),
+      h("tbody", {},
+        ...canais.map(c =>
+          h("tr", { class: c.canal === "reclame_aqui" ? "destaque-ra" : "" },
+            h("td", {},
+              h("b", {}, c.rotulo || c.canal),
+              c.canal === "reclame_aqui" ? h("span", { class: "pill hum", style: "margin-left:8px" }, "maior peso no custo") : null
+            ),
+            h("td", { class: "dir" }, intBR(c.conversas)),
+            h("td", { class: "dir" }, pct(c.pct_conversas, 1)),
+            h("td", { class: "dir" }, brl(c.custo_unitario, true)),
+            h("td", { class: "dir" }, h("b", {}, brl(c.custo))),
+            h("td", { class: "dir" }, h("b", {}, pct(c.pct_custo, 1)))
+          )
+        )
+      )
+    )
+  );
+
+  return h("section", { class: "card" },
+    h("div", { class: "secao-topo" },
+      h("div", {},
+        h("span", { class: "num-pergunta" }, "Pergunta 1"),
+        h("h2", { class: "pergunta" }, "Por que os clientes nos procuram, e qual o peso real de cada motivo?")
+      )
+    ),
+    h("p", { class: "secao-sub" },
+      "O volume de conversas sozinho esconde o custo real: motivos e canais com atendimento mais complexo ou caro distorcem o orçamento. Compare a fatia das conversas com a fatia do custo."
+    ),
+    h("div", { class: "controles-p1" },
+      h("div", { class: "seg-group", role: "group", "aria-label": "Agrupamento do gráfico" }, btnCat, btnMot),
+      h("div", { class: "legenda-barras" },
+        h("span", {}, h("i", { class: "dot vol" }), "% das conversas"),
+        h("span", {}, h("i", { class: "dot cus" }), "% do custo total")
+      )
+    ),
+    containerGrafico,
+    h("h3", { style: "margin-top:6px" }, "Peso por canal de atendimento (o contraste volume × custo)"),
+    tabelaCanais
+  );
+}
+
+function secaoP2(p2, custoTotal) {
+  const itens = p2?.itens || [];
+  const totalEvitavel = p2?.total_custo || 0;
+  const fatia = custoTotal ? totalEvitavel / custoTotal : null;
+
+  return h("section", { class: "card" },
+    h("div", { class: "secao-topo" },
+      h("div", {},
+        h("span", { class: "num-pergunta" }, "Pergunta 2"),
+        h("h2", { class: "pergunta" }, "Quais contatos poderiam não existir?")
+      ),
+      h("span", { class: "pill warn" },
+        `Até ${brl(totalEvitavel)} em contatos evitáveis${fatia ? ` (${pct(fatia)} do custo)` : ""}`
+      )
+    ),
+    h("p", { class: "secao-sub" },
+      "Contatos gerados por falta de aviso ativo, resposta incompleta na primeira interação ou fricção no autoatendimento."
+    ),
+    h("div", { class: "grade-evitaveis" },
+      ...itens.map(item =>
+        h("div", { class: "card-evitavel" },
+          h("div", { class: "topo-ev" },
+            h("span", { class: "tit-ev" }, item.rotulo),
+            h("span", { class: "custo-ev" }, `${brl(item.custo)} · ${intBR(item.conversas)} conv.`)
+          ),
+          h("p", { class: "acao-ev" }, item.como_evitar)
+        )
+      )
+    )
+  );
+}
+
+function secaoP3(p3) {
+  const itens = p3?.itens || [];
+  return h("section", { class: "card" },
+    h("div", { class: "secao-topo" },
+      h("div", {},
+        h("span", { class: "num-pergunta" }, "Pergunta 3"),
+        h("h2", { class: "pergunta" }, "O que atacar primeiro, e com que critério?")
+      )
+    ),
+    h("div", { class: "criterio-box" },
+      h("b", {}, "Critério de priorização:"),
+      h("span", {}, p3?.criterio || "Custo trimestral × gravidade × facilidade de ação.")
+    ),
+    h("div", { class: "lista-rank" },
+      ...itens.map(item =>
+        h("div", { class: "item-rank" },
+          h("div", { class: "bola-rank" }, String(item.rank)),
+          h("div", { class: "corpo-rank" },
+            h("span", { class: "foco" }, item.foco),
+            h("span", { class: "porque" }, item.porque)
+          ),
+          h("div", { class: "numeros-rank" },
+            h("span", { class: "custo" }, brl(item.custo)),
+            h("span", { class: "conv" }, `${intBR(item.conversas)} conversas`)
+          )
+        )
+      )
+    )
+  );
+}
+
+function secaoP4(p4) {
+  const total = p4?.fila_avaliada || 0;
+  const auto = p4?.automatico || 0;
+  const hum = p4?.humano || 0;
+  const pAuto = total ? auto / total : 0;
+  const pHum = total ? hum / total : 0;
+
+  const acoes = p4?.por_acao || [];
+  const filas = p4?.por_fila_humana || [];
+  const politicas = p4?.politicas_faltantes || [];
+
+  return h("section", { class: "card" },
+    h("div", { class: "secao-topo" },
+      h("div", {},
+        h("span", { class: "num-pergunta" }, "Pergunta 4"),
+        h("h2", { class: "pergunta" }, "O que o sistema faz sozinho e o que precisa de pessoa?")
+      ),
+      h("span", { class: "pill acc" }, `${intBR(total)} conversas avaliadas na fila pendente/reaberta`)
+    ),
+    h("div", { class: "barra-divisao" },
+      h("div", { class: "rotulos-div" },
+        h("span", { class: "rot-auto" }, `✓ Automático: ${pct(pAuto)} (${intBR(auto)} conversas)`),
+        h("span", { class: "rot-hum" }, `→ Pessoa (com dossiê): ${pct(pHum)} (${intBR(hum)} conversas)`)
+      ),
+      h("div", { class: "trilho-div", role: "img", "aria-label": `Divisão entre automático (${pct(pAuto)}) e humano (${pct(pHum)})` },
+        h("div", { class: "seg-auto", style: `width:${(pAuto * 100).toFixed(1)}%` }),
+        h("div", { class: "seg-hum", style: `width:${(pHum * 100).toFixed(1)}%` })
+      ),
+      h("p", { class: "nota-resolucao" },
+        `Dos casos automáticos, uma parte apenas solicita a foto ou informação obrigatória ao cliente; a resolução direta imediata fica em `,
+        h("b", {}, pct(p4?.resolucao_completa_pct)),
+        ` da fila. Casos de saúde e Reclame Aqui têm regra inegociável e vão sempre para uma pessoa.`
+      )
+    ),
+    h("div", { class: "colunas-p4" },
+      h("div", { class: "bloco-p4" },
+        h("h3", {}, "Ações que o agente faz sozinho"),
+        h("div", { class: "lista-simples" },
+          ...acoes.map(a =>
+            h("div", { class: "linha-simples" },
+              h("div", { class: "topo-s" },
+                h("span", { class: "rot-s" }, a.rotulo || a.acao),
+                h("span", { class: "val-s" }, intBR(a.conversas))
+              )
+            )
+          )
+        )
+      ),
+      h("div", { class: "bloco-p4" },
+        h("h3", {}, "Filas humanas (encaminhadas com dossiê)"),
+        h("div", { class: "lista-simples" },
+          ...filas.map(f =>
+            h("div", { class: "linha-simples" },
+              h("div", { class: "topo-s" },
+                h("span", { class: "rot-s" }, f.rotulo || f.fila),
+                h("span", { class: "val-s" }, intBR(f.conversas))
+              )
+            )
+          )
+        )
+      ),
+      h("div", { class: "bloco-p4" },
+        h("h3", {}, "Políticas que destravariam mais automação"),
+        h("div", { class: "lista-simples" },
+          ...politicas.map(pol =>
+            h("div", { class: "linha-simples" },
+              h("div", { class: "topo-s" },
+                h("span", { class: "rot-s" }, pol.rotulo || pol.motivo),
+                h("span", { class: "val-s" }, `${intBR(pol.conversas)} conv.`)
+              ),
+              pol.sugestao ? h("span", { class: "sug-s" }, pol.sugestao) : null
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+async function carregarDiagnostico() {
+  iniciarTema();
+  try {
+    const r = await fetch("diagnostico.json");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+
+    renderizarTopo(d);
+    $("conteudo").replaceChildren(
+      secaoP1(d.p1_por_que_procuram),
+      secaoP2(d.p2_contatos_evitaveis, d.totais?.custo_estimado),
+      secaoP3(d.p3_atacar_primeiro),
+      secaoP4(d.p4_sozinho_ou_pessoa)
+    );
+
+    if (d.classificacao?.observacao) {
+      $("obs-classificacao").textContent =
+        `Nota sobre a avaliação da classificação (${intBR(d.classificacao.amostra_gabarito)} conversas no gabarito, recall de ${pct(d.classificacao.recall_motivos, 1)}): ${d.classificacao.observacao}`;
+    }
+  } catch (e) {
+    $("conteudo").replaceChildren(
+      h("div", { class: "erro" }, "Não foi possível carregar o diagnóstico: " + e.message)
+    );
+  }
+}
+
+carregarDiagnostico();
+</script>
+</body>
+</html>
