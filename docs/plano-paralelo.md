@@ -63,6 +63,14 @@ deles: trabalha só com o contrato e com o JSON de exemplo.
 Valores monetários em reais (número, sem formatação). Percentuais como fração de 0 a 1.
 Listas já vêm **ordenadas** como devem aparecer. Nenhum ID, nome ou texto de cliente.
 
+**Duas escalas (importante para a página):** os arquivos do case são uma amostra de 1 em cada 3 clientes.
+- Todo campo `conversas` é contagem **da amostra** (4.000 conversas no total).
+- Todo campo `custo`/`custo_estimado`/`total_custo` é o custo **trimestral da operação inteira**
+  (custo da amostra × `totais.fator_expansao`).
+- `totais.conversas_estimadas` = `conversas` × `fator_expansao` (≈ 12.000 no trimestre): use este
+  número quando ele aparecer ao lado do custo, para não sugerir que 4.000 conversas custam R$ 108 mil.
+- Percentuais não mudam com a expansão.
+
 ```json
 {
   "exemplo": true,
@@ -71,6 +79,8 @@ Listas já vêm **ordenadas** como devem aparecer. Nenhum ID, nome ou texto de c
 
   "totais": {
     "conversas": 4000,
+    "fator_expansao": 3,
+    "conversas_estimadas": 12000,
     "custo_estimado": 108000,
     "marcas": 9
   },
@@ -132,6 +142,10 @@ Listas já vêm **ordenadas** como devem aparecer. Nenhum ID, nome ou texto de c
 
 Mudança no contrato = combinar antes (o Caio avisa o outro agente).
 
+**Histórico do contrato**
+- 2026-11-09: adicionados `totais.fator_expansao` e `totais.conversas_estimadas` (aprovado pelo Caio).
+  Só acréscimo: nenhum campo existente mudou de nome ou de significado.
+
 ---
 
 ## 4. Página Diagnóstico (Antigravity)
@@ -139,7 +153,9 @@ Mudança no contrato = combinar antes (o Caio avisa o outro agente).
 Público: a **liderança** do atendimento e o avaliador do desafio. Deve ser lida em 1 minuto.
 
 - **Topo:** uma frase-tese + 3 a 4 números grandes (conversas, custo estimado, % automatizável,
-  acerto do agente contra a tag manual).
+  acerto do agente contra a tag manual). Ao lado do custo, mostrar `conversas_estimadas` (≈ 12 mil
+  no trimestre) e uma nota curta: "análise numa amostra de 4.000 conversas (1 em cada 3 clientes);
+  custos estimados para a operação inteira".
 - **Uma seção por pergunta do enunciado**, com o título sendo a própria pergunta:
   1. *Por que os clientes nos procuram, e qual o peso real de cada motivo?* Barras horizontais por
      motivo ou categoria comparando **% das conversas × % do custo** (o contraste é a mensagem). Canais em tabela.

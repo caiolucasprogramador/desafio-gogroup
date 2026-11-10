@@ -40,7 +40,7 @@ regras_fixas ─┬─(saúde / Reclame Aqui)→ escalar_humano → END
 
 | Pasta | Conteúdo |
 |---|---|
-| `atendimento/dominio/` | taxonomia (8 categorias, 26 motivos, `GRAVIDADE`), políticas, parâmetros, schemas Pydantic |
+| `atendimento/dominio/` | taxonomia (8 categorias, 25 motivos, `GRAVIDADE`), políticas, parâmetros, schemas Pydantic |
 | `atendimento/servicos/` | regras de cada etapa: anonimização, classificação (LLM), enriquecimento, priorização, elegibilidade, decisão, respostas (templates), redação (LLM opcional), cliente LLM |
 | `atendimento/grafo/` | estado, fluxo, roteamento e nós |
 | `atendimento/lote.py` | classificação em lote com cache JSONL (histórico de 4.000 conversas já classificado) |
@@ -92,13 +92,24 @@ SEM_LLM=1 python -m scripts.rodar_grafo <conversation_id> ...
 
 ## Números para o README (agregados, podem ser publicados)
 
-- Classificação no gabarito de 96 conversas: motivo principal **94,8%** (contra **59,5%** da tag manual), recall 98,3%, saúde 14/14.
-  Limitação: o gabarito foi rotulado por IA, sem validação humana.
-- Fila pendente/reaberta: 1.337 conversas; **59% automatizáveis** (784) e 41% para humano (553).
-  Dos automáticos, 222 apenas pedem informação: a resolução completa fica em torno de 42%.
+Fonte única: `public/diagnostico.json`, gerado por `scripts/gerar_diagnostico.py` (que confere os
+números abaixo a cada execução e marca ✗ o que mudar). Se um número mudar, atualize aqui e no README.
+
+- **Escala:** os arquivos são uma amostra de 1 em cada 3 clientes. Contagens de conversas são da
+  amostra (4.000); custos são trimestrais da operação inteira (amostra × 3, ≈ 12.000 conversas).
+- Classificação no gabarito de 96 conversas: motivo principal **94,8%** contra **53,2%** da tag manual
+  (mesma régua: o motivo principal do gabarito; se a tag puder bater com qualquer motivo, 60,6%),
+  recall 98,3%, saúde 14/14. Limitação: o gabarito foi rotulado por IA, sem validação humana.
+  (O antigo 59,5% era de uma rodada anterior, com 79 conversas e outro critério de motivo principal.)
 - Custo trimestral estimado: **R$ 108.299**. Reclame Aqui = 10% das conversas e **47% do custo** (R$ 51.282).
-- Para humano por falta de política (oportunidades): brinde faltante 92, dúvida de produto 86,
-  insatisfação 53, troca (exceto fragrância) 31.
+  Entrega (categoria) R$ 41.576; atraso R$ 23.738; rastreio R$ 14.227.
+- Contatos evitáveis: recontato R$ 28.642 (739 conversas), rastreio R$ 14.227, abandono no bot R$ 6.610,
+  endereço R$ 3.611; total sem dupla contagem **R$ 48.902** (45% do custo).
+- Fila pendente/reaberta: 1.337 conversas; **59% automatizáveis** (784) e 41% para humano (553).
+  Dos automáticos, 222 têm como ação principal pedir informação: a resolução completa fica em 42%.
+- Políticas faltantes = conversas humanas cujo **único** bloqueio é esse motivo (virariam automáticas
+  com a política): brinde faltante 88, dúvida de produto 85, insatisfação 53, troca (exceto fragrância) 28,
+  pagamento não confirmado 24, cupom 22, cashback 15, frete grátis 6.
 - Outras limitações: sem data de recebimento (usamos um limite seguro), SLA ignora horário comercial,
   pesos não calibrados com dados, cotas gratuitas de LLM.
 
@@ -116,15 +127,15 @@ os clientes nos procuram, nem do que fazer a respeito."*
 | Agente de IA com ação útil | ✅ classifica, decide e responde ou encaminha com dossiê |
 | Link público sem login | ✅ publicado na Vercel (confirmar que o "Atender" funciona lá com as chaves) |
 | Repositório público no GitHub | ❌ ainda privado |
-| Respostas com números | ❌ **lacuna principal**: os números só existem em `dados/` (local, fora do git) |
+| Respostas com números | 🟡 `public/diagnostico.json` (agregados reais) e README prontos; falta a página Diagnóstico |
 
 ### Perguntas de referência do enunciado → nossa resposta (já calculada)
 
 | Pergunta | Resposta |
 |---|---|
-| Por que os clientes nos procuram, e qual o peso real de cada motivo? | motivo × volume × custo nas 4.000 conversas; custo trimestral R$ 108 mil; tag manual acerta 59,5% contra 94,8% do agente |
-| Quais contatos poderiam simplesmente não existir? | recontato (R$ 28,6 mil), dúvida de rastreio (R$ 14,2 mil), abandono no bot (R$ 6,6 mil), endereço (R$ 3,6 mil) |
-| O que o time deveria atacar primeiro, e com que critério? | Reclame Aqui = 10% dos contatos e 47% do custo; entrega = R$ 41,6 mil; score de prioridade da fila |
+| Por que os clientes nos procuram, e qual o peso real de cada motivo? | motivo × volume × custo nas 4.000 conversas; custo trimestral R$ 108 mil; tag manual acerta 53,2% contra 94,8% do agente |
+| Quais contatos poderiam simplesmente não existir? | recontato (R$ 28,6 mil), dúvida de rastreio (R$ 14,2 mil), abandono no bot (R$ 6,6 mil), endereço (R$ 3,6 mil); R$ 48,9 mil sem dupla contagem |
+| O que o time deveria atacar primeiro, e com que critério? | Reclame Aqui (10% dos contatos, 47% do custo) → atraso e rastreio → recontato → saúde (pela gravidade) |
 | Que ações o sistema pode tomar sozinho, e quais precisam de uma pessoa? | 59% automatizável / 41% humano, por motivo, e as políticas que faltam para destravar o resto |
 
 ### Tarefas, em ordem
