@@ -61,7 +61,8 @@ os CSVs. Por isso a API publicada não expõe nenhum dado do case e não depende
 - `decidir` é uma tabela determinística; motivo sem regra vai para humano. A conversa só é automática se **todos** os motivos forem.
 - O nó `auditar` foi removido; suas garantias viraram `tests/test_invariantes.py`.
 - Classificação: `gemini-3.5-flash-lite` (Groq tem limite diário baixo). Redação opcional: `openai/gpt-oss-120b` (Groq).
-- Publicar **só** a tela "Testar o agente" com pedido simulado; nenhuma fila ou conversa real no link.
+- No link público, nenhuma fila ou conversa real: a tela "Testar o agente" usa pedido simulado.
+  Números **agregados** (página Diagnóstico) estão no plano, aguardando confirmação do Caio.
 - Hospedagem: **Vercel** (a GoCase usa Vercel).
 - Pendente de confirmação do Caio: limite de **R$ 200** para ação automática com custo (`LIMITE_VALOR_AUTOMATICO`).
 
@@ -101,10 +102,56 @@ SEM_LLM=1 python -m scripts.rodar_grafo <conversation_id> ...
 - Outras limitações: sem data de recebimento (usamos um limite seguro), SLA ignora horário comercial,
   pesos não calibrados com dados, cotas gratuitas de LLM.
 
-## Backlog
+## Plano de implementação (o que falta)
 
-1. **Frontend mais agradável** (`public/index.html`): carregamento com os nós acendendo, introdução
+O enunciado pede só **dois links** (solução publicada + repositório público) e diz que as melhores
+respostas são **defendidas com números**. Não há relatório à parte: os números precisam estar
+**dentro da solução**. Contexto do Problema 1: *"A liderança não tem uma visão confiável de por que
+os clientes nos procuram, nem do que fazer a respeito."*
+
+### Situação dos requisitos
+
+| Requisito | Situação |
+|---|---|
+| Agente de IA com ação útil | ✅ classifica, decide e responde ou encaminha com dossiê |
+| Link público sem login | ✅ publicado na Vercel (confirmar que o "Atender" funciona lá com as chaves) |
+| Repositório público no GitHub | ❌ ainda privado |
+| Respostas com números | ❌ **lacuna principal**: os números só existem em `dados/` (local, fora do git) |
+
+### Perguntas de referência do enunciado → nossa resposta (já calculada)
+
+| Pergunta | Resposta |
+|---|---|
+| Por que os clientes nos procuram, e qual o peso real de cada motivo? | motivo × volume × custo nas 4.000 conversas; custo trimestral R$ 108 mil; tag manual acerta 59,5% contra 94,8% do agente |
+| Quais contatos poderiam simplesmente não existir? | recontato (R$ 28,6 mil), dúvida de rastreio (R$ 14,2 mil), abandono no bot (R$ 6,6 mil), endereço (R$ 3,6 mil) |
+| O que o time deveria atacar primeiro, e com que critério? | Reclame Aqui = 10% dos contatos e 47% do custo; entrega = R$ 41,6 mil; score de prioridade da fila |
+| Que ações o sistema pode tomar sozinho, e quais precisam de uma pessoa? | 59% automatizável / 41% humano, por motivo, e as políticas que faltam para destravar o resto |
+
+### Tarefas, em ordem
+
+1. **Página "Diagnóstico" no site** (prioridade máxima).
+   - Script em `scripts/` que lê os dados locais e gera um JSON **só com agregados** (totais e
+     percentuais por motivo, canal, custo, automático × humano). Nenhum texto de conversa, nenhum
+     ID de cliente, pedido ou conversa. Esse JSON é versionado e servido com a página.
+   - Página que lê o JSON e responde às 4 perguntas acima com números e gráficos.
+   - Navegação entre "Diagnóstico" e "Testar o agente".
+   - Antes de publicar: confirmar com o Caio que os agregados podem ir para o site (ele havia
+     decidido publicar só a tela do agente para não expor conversas; agregados não expõem nenhuma).
+2. **README**: o problema, as respostas às 4 perguntas com os mesmos números, arquitetura,
+   limitações, como rodar e os dois links.
+3. **Repositório público**: antes, o Caio decide se `scripts/rotulos_propostos.py` fica (contém só
+   IDs de conversa e rótulos do gabarito, sem texto; sugestão: manter e explicar no README).
+   Depois: GitHub → Settings → Change visibility → Public.
+4. **Frontend mais agradável** (`public/index.html`): carregamento com os nós acendendo, introdução
    curta do que o avaliador está vendo, link para o repositório, comparação template × LLM lado a lado.
    Manter: tema claro/escuro, funcionar no celular, escapar todo texto vindo da API (sem `innerHTML`).
-2. **README** com problema, arquitetura, números acima, limitações, como rodar e o link público.
-3. Fazer a resposta do Reclame Aqui passar pelo `decidir` antes de ir para humano (o dossiê ganharia ações sugeridas).
+5. *(Opcional)* Fazer o Reclame Aqui passar pelo `decidir` antes de ir para humano (o dossiê ganharia
+   ações sugeridas).
+
+### Orquestração entre agentes
+
+- Uma branch por tarefa, cada uma vira PR; o Caio faz o merge (push na `main` publica na Vercel).
+- Tarefas que não tocam os mesmos arquivos podem rodar em paralelo: frontend (`public/`) e backend
+  (`servicos/`, `grafo/`, `tests/`). O README entra por último, descrevendo o que ficou pronto.
+- Testes sem LLM (`SEM_LLM=1` ou o mock de `tests/test_api.py`): as cotas são compartilhadas.
+- Decisão de negócio nova: parar e perguntar ao Caio.
