@@ -1,6 +1,6 @@
 {
   "exemplo": false,
-  "gerado_em": "2026-11-09",
+  "gerado_em": "2026-11-11",
   "periodo": {
     "inicio": "2026-07-02",
     "fim": "2026-09-29",
@@ -732,12 +732,525 @@
     "fila_em_aberto": 1337,
     "tags_manuais_existentes": 13,
     "conversas_com_tag": 3692,
+    "tags_manuais_distribuicao": [
+      {
+        "tag": "Rastreio",
+        "conversas": 676
+      },
+      {
+        "tag": "Atraso",
+        "conversas": 450
+      },
+      {
+        "tag": "Produto faltando",
+        "conversas": 388
+      },
+      {
+        "tag": "Avaria",
+        "conversas": 319
+      },
+      {
+        "tag": "Financeiro",
+        "conversas": 263
+      },
+      {
+        "tag": "Outros",
+        "conversas": 248
+      },
+      {
+        "tag": "Dúvida",
+        "conversas": 239
+      },
+      {
+        "tag": "Reclamação produto",
+        "conversas": 228
+      },
+      {
+        "tag": "Cancelamento",
+        "conversas": 223
+      },
+      {
+        "tag": "Troca",
+        "conversas": 214
+      },
+      {
+        "tag": "Promoção",
+        "conversas": 178
+      },
+      {
+        "tag": "Endereço",
+        "conversas": 159
+      },
+      {
+        "tag": "Elogio",
+        "conversas": 107
+      }
+    ],
+    "conversas_multimotivo": 566,
+    "pct_multimotivo": 0.1598,
+    "pedidos_faturados_periodo": 166000,
     "custo_por_canal": {
       "whatsapp": 4.8,
       "email": 7.2,
       "reclame_aqui": 42.0
     },
     "categorias_taxonomia": 8,
-    "motivos_taxonomia": 25
+    "motivos_taxonomia": 25,
+    "parametros": {
+      "pesos_prioridade": {
+        "gravidade": 0.4,
+        "canal": 0.15,
+        "sla": 0.15,
+        "recontato": 0.15,
+        "valor": 0.1,
+        "tom": 0.05
+      },
+      "fator_motivos_secundarios": 0.3,
+      "valor_teto_prioridade": 163.0,
+      "limite_valor_automatico": 200.0,
+      "sla_horas": {
+        "whatsapp": 0.5,
+        "email": 24.0,
+        "reclame_aqui": 48.0
+      },
+      "gravidade": [
+        {
+          "motivo": "reacao_adversa",
+          "rotulo": "Reação adversa",
+          "categoria": "saude",
+          "gravidade": 100
+        },
+        {
+          "motivo": "duvida_saude",
+          "rotulo": "Dúvida de saúde",
+          "categoria": "saude",
+          "gravidade": 90
+        },
+        {
+          "motivo": "cobranca_duplicada",
+          "rotulo": "Cobrança duplicada",
+          "categoria": "financeiro",
+          "gravidade": 80
+        },
+        {
+          "motivo": "cobranca_nao_reconhecida",
+          "rotulo": "Cobrança não reconhecida",
+          "categoria": "financeiro",
+          "gravidade": 80
+        },
+        {
+          "motivo": "pagamento_nao_confirmado",
+          "rotulo": "Pagamento não confirmado",
+          "categoria": "financeiro",
+          "gravidade": 70
+        },
+        {
+          "motivo": "arrependimento",
+          "rotulo": "Arrependimento",
+          "categoria": "cancelamento_troca",
+          "gravidade": 60
+        },
+        {
+          "motivo": "compra_duplicada_cliente",
+          "rotulo": "Compra duplicada pelo cliente",
+          "categoria": "cancelamento_troca",
+          "gravidade": 60
+        },
+        {
+          "motivo": "avaria_vazamento",
+          "rotulo": "Avaria ou vazamento",
+          "categoria": "pedido_incompleto_danificado",
+          "gravidade": 55
+        },
+        {
+          "motivo": "erro_personalizacao",
+          "rotulo": "Erro de personalização",
+          "categoria": "pedido_incompleto_danificado",
+          "gravidade": 55
+        },
+        {
+          "motivo": "item_faltante",
+          "rotulo": "Item faltante",
+          "categoria": "pedido_incompleto_danificado",
+          "gravidade": 55
+        },
+        {
+          "motivo": "alteracao_endereco",
+          "rotulo": "Alteração de endereço",
+          "categoria": "entrega",
+          "gravidade": 50
+        },
+        {
+          "motivo": "atraso",
+          "rotulo": "Atraso na entrega",
+          "categoria": "entrega",
+          "gravidade": 50
+        },
+        {
+          "motivo": "troca_outros",
+          "rotulo": "Troca (exceto fragrância)",
+          "categoria": "cancelamento_troca",
+          "gravidade": 40
+        },
+        {
+          "motivo": "troca_fragrancia",
+          "rotulo": "Troca de fragrância",
+          "categoria": "cancelamento_troca",
+          "gravidade": 40
+        },
+        {
+          "motivo": "brinde_faltante",
+          "rotulo": "Brinde faltante",
+          "categoria": "pedido_incompleto_danificado",
+          "gravidade": 35
+        },
+        {
+          "motivo": "cancelar_recomprar_cupom",
+          "rotulo": "Cancelar para recomprar com cupom",
+          "categoria": "cancelamento_troca",
+          "gravidade": 35
+        },
+        {
+          "motivo": "cashback",
+          "rotulo": "Cashback",
+          "categoria": "financeiro",
+          "gravidade": 35
+        },
+        {
+          "motivo": "cupom_promocao_nao_aplicou",
+          "rotulo": "Cupom não aplicado",
+          "categoria": "promocao",
+          "gravidade": 25
+        },
+        {
+          "motivo": "rastreio_status",
+          "rotulo": "Dúvida sobre rastreio",
+          "categoria": "entrega",
+          "gravidade": 25
+        },
+        {
+          "motivo": "frete_gratis",
+          "rotulo": "Frete grátis não aplicado",
+          "categoria": "promocao",
+          "gravidade": 25
+        },
+        {
+          "motivo": "insatisfacao_produto",
+          "rotulo": "Insatisfação com o produto",
+          "categoria": "produto",
+          "gravidade": 20
+        },
+        {
+          "motivo": "duvida_produto",
+          "rotulo": "Dúvida sobre produto",
+          "categoria": "produto",
+          "gravidade": 15
+        },
+        {
+          "motivo": "outro",
+          "rotulo": "Outro",
+          "categoria": "outros",
+          "gravidade": 10
+        },
+        {
+          "motivo": "elogio",
+          "rotulo": "Elogio",
+          "categoria": "outros",
+          "gravidade": 5
+        },
+        {
+          "motivo": "sem_conteudo",
+          "rotulo": "Abandono no bot",
+          "categoria": "outros",
+          "gravidade": 0
+        }
+      ],
+      "politicas": [
+        {
+          "id": "arrependimento",
+          "texto": "Arrependimento: até 7 dias do recebimento, reembolso integral (CDC, art. 49).",
+          "acao": "reembolso_integral",
+          "prazo_dias": 7,
+          "exige_foto": false,
+          "motivos": [
+            "arrependimento",
+            "compra_duplicada_cliente",
+            "cancelar_recomprar_cupom"
+          ]
+        },
+        {
+          "id": "avaria_faltante",
+          "texto": "Avaria, vazamento ou item faltante: reenvio sem custo, mediante foto, em até 7 dias do recebimento.",
+          "acao": "reenvio_sem_custo",
+          "prazo_dias": 7,
+          "exige_foto": true,
+          "motivos": [
+            "item_faltante",
+            "avaria_vazamento"
+          ]
+        },
+        {
+          "id": "troca_fragrancia",
+          "texto": "Troca por insatisfação com fragrância: 1 troca por pedido, em até 30 dias, com no máximo 20% do produto utilizado.",
+          "acao": "troca_fragrancia",
+          "prazo_dias": 30,
+          "exige_foto": false,
+          "motivos": [
+            "troca_fragrancia"
+          ]
+        },
+        {
+          "id": "cobranca_duplicada",
+          "texto": "Cobrança duplicada: estorno em até 2 faturas (cartão) ou 5 dias úteis (pix).",
+          "acao": "estorno",
+          "prazo_dias": null,
+          "exige_foto": false,
+          "motivos": [
+            "cobranca_duplicada"
+          ]
+        },
+        {
+          "id": "reacao_adversa",
+          "texto": "Reação adversa: orientar a suspensão do uso, registrar no protocolo de cosmetovigilância (produto, lote, descrição e fotos) em até 24 horas e encaminhar para a responsável técnica. A troca do produto não substitui o registro.",
+          "acao": "registro_cosmetovigilancia",
+          "prazo_dias": null,
+          "exige_foto": false,
+          "motivos": [
+            "reacao_adversa"
+          ]
+        },
+        {
+          "id": "alteracao_endereco",
+          "texto": "Alteração de endereço: possível somente antes da separação do pedido.",
+          "acao": "alterar_endereco",
+          "prazo_dias": null,
+          "exige_foto": false,
+          "motivos": [
+            "alteracao_endereco"
+          ]
+        },
+        {
+          "id": "erro_personalizacao",
+          "texto": "Erro de personalização Gocase: nova produção sem custo, mediante foto, em até 7 dias do recebimento.",
+          "acao": "nova_producao",
+          "prazo_dias": 7,
+          "exige_foto": true,
+          "motivos": [
+            "erro_personalizacao"
+          ]
+        }
+      ],
+      "sempre_humano": [
+        "duvida_saude",
+        "reacao_adversa"
+      ],
+      "modelo_classificacao": "gemini-3.5-flash-lite",
+      "modelo_redacao": "openai/gpt-oss-120b",
+      "tamanho_grupo_lote": 15,
+      "redacao_amostra": {
+        "testadas": 27,
+        "aceitas": 27
+      }
+    }
+  },
+  "extras": {
+    "fora_do_horario": {
+      "horario_comercial": {
+        "inicio": 8,
+        "fim": 20
+      },
+      "conversas_base": 3541,
+      "fora": 1071,
+      "pct_fora": 0.3025,
+      "por_canal": [
+        {
+          "canal": "email",
+          "rotulo": "E-mail",
+          "conversas": 733,
+          "fora": 215,
+          "pct_fora": 0.2933
+        },
+        {
+          "canal": "reclame_aqui",
+          "rotulo": "Reclame Aqui",
+          "conversas": 407,
+          "fora": 122,
+          "pct_fora": 0.2998
+        },
+        {
+          "canal": "whatsapp",
+          "rotulo": "WhatsApp",
+          "conversas": 2401,
+          "fora": 734,
+          "pct_fora": 0.3057
+        }
+      ],
+      "por_hora": [
+        {
+          "hora": 0,
+          "conversas": 15
+        },
+        {
+          "hora": 1,
+          "conversas": 0
+        },
+        {
+          "hora": 2,
+          "conversas": 0
+        },
+        {
+          "hora": 3,
+          "conversas": 0
+        },
+        {
+          "hora": 4,
+          "conversas": 0
+        },
+        {
+          "hora": 5,
+          "conversas": 0
+        },
+        {
+          "hora": 6,
+          "conversas": 0
+        },
+        {
+          "hora": 7,
+          "conversas": 198
+        },
+        {
+          "hora": 8,
+          "conversas": 195
+        },
+        {
+          "hora": 9,
+          "conversas": 192
+        },
+        {
+          "hora": 10,
+          "conversas": 198
+        },
+        {
+          "hora": 11,
+          "conversas": 207
+        },
+        {
+          "hora": 12,
+          "conversas": 207
+        },
+        {
+          "hora": 13,
+          "conversas": 191
+        },
+        {
+          "hora": 14,
+          "conversas": 207
+        },
+        {
+          "hora": 15,
+          "conversas": 226
+        },
+        {
+          "hora": 16,
+          "conversas": 196
+        },
+        {
+          "hora": 17,
+          "conversas": 206
+        },
+        {
+          "hora": 18,
+          "conversas": 225
+        },
+        {
+          "hora": 19,
+          "conversas": 220
+        },
+        {
+          "hora": 20,
+          "conversas": 196
+        },
+        {
+          "hora": 21,
+          "conversas": 198
+        },
+        {
+          "hora": 22,
+          "conversas": 238
+        },
+        {
+          "hora": 23,
+          "conversas": 226
+        }
+      ],
+      "resolviveis_fora": 639,
+      "pct_resolviveis_fora": 0.5966
+    },
+    "transportadoras": {
+      "contatos_entrega_total": 1306,
+      "pedidos_total": 3237,
+      "itens": [
+        {
+          "transportadora": "Rota Express",
+          "pedidos": 1119,
+          "pct_pedidos": 0.3457,
+          "atrasados": 86,
+          "pct_atrasados": 0.0769,
+          "contatos_entrega": 815,
+          "pct_contatos_entrega": 0.624,
+          "custo_entrega": 25013
+        },
+        {
+          "transportadora": "Postal Nacional",
+          "pedidos": 546,
+          "pct_pedidos": 0.1687,
+          "atrasados": 15,
+          "pct_atrasados": 0.0275,
+          "contatos_entrega": 131,
+          "pct_contatos_entrega": 0.1003,
+          "custo_entrega": 3211
+        },
+        {
+          "transportadora": "Entrega Já",
+          "pedidos": 517,
+          "pct_pedidos": 0.1597,
+          "atrasados": 14,
+          "pct_atrasados": 0.0271,
+          "contatos_entrega": 123,
+          "pct_contatos_entrega": 0.0942,
+          "custo_entrega": 3521
+        },
+        {
+          "transportadora": "Veloz Log",
+          "pedidos": 523,
+          "pct_pedidos": 0.1616,
+          "atrasados": 12,
+          "pct_atrasados": 0.0229,
+          "contatos_entrega": 126,
+          "pct_contatos_entrega": 0.0965,
+          "custo_entrega": 3334
+        },
+        {
+          "transportadora": "Carga Norte",
+          "pedidos": 532,
+          "pct_pedidos": 0.1643,
+          "atrasados": 11,
+          "pct_atrasados": 0.0207,
+          "contatos_entrega": 111,
+          "pct_contatos_entrega": 0.085,
+          "custo_entrega": 2887
+        }
+      ]
+    },
+    "reclame_aqui_antes": {
+      "conversas": 407,
+      "com_contato_anterior": 249,
+      "pct_com_contato_anterior": 0.6118,
+      "mesmo_pedido_antes": 147,
+      "pct_mesmo_pedido_antes": 0.3612,
+      "canal_barato_antes": 237,
+      "pct_canal_barato_antes": 0.5823,
+      "custo_com_contato_anterior": 31374
+    }
   }
 }

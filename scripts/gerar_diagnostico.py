@@ -28,7 +28,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from atendimento.dominio.parametros import CUSTO_CONVERSA
+from atendimento.dominio.parametros import (
+    CUSTO_CONVERSA, FATOR_MOTIVOS_SECUNDARIOS, LIMITE_VALOR_AUTOMATICO, PESOS_PRIORIDADE, SLA_HORAS,
+    VALOR_TETO_PRIORIDADE,
+)
+from atendimento.dominio.politicas import MOTIVO_PARA_POLITICA, POLITICAS
 from atendimento.dominio.rotulos import ACOES, CANAIS, CATEGORIAS, FILAS, MOTIVOS_ROTULO
 from atendimento.dominio.taxonomia import GRAVIDADE, MOTIVO_PARA_CATEGORIA, SEMPRE_HUMANO
 from atendimento.servicos.anonimizacao import PADROES
@@ -38,6 +42,9 @@ SAIDA = RAIZ / "public" / "diagnostico.json"
 
 # parametros.md: "os arquivos trazem uma amostra aleatória de 1 em cada 3 clientes".
 FATOR_EXPANSAO = 3
+# parametros.md: "Pedidos faturados no mesmo período, no canal próprio: cerca de 70.000 da Gocase e
+# 96.000 da GoBeauté" (operação inteira, não a amostra).
+PEDIDOS_FATURADOS_PERIODO = 70_000 + 96_000
 
 # --- Privacidade ------------------------------------------------------------------------
 # IDs do case: conversa CV…, cliente CL…, pedido GB…/GC…, mensagem M…
@@ -324,6 +331,8 @@ def bloco_metodologia(origem: Path, d: pd.DataFrame, fila: list[dict]) -> dict:
     cli = msgs[msgs.autor == "cliente"].sort_values("timestamp").groupby("conversation_id").texto.apply(list)
     unicos = {normalizar(t) for t in cli}
     tags = d.tag_agente.dropna()
+    com_msg = d[d.motivo_principal != "sem_conteudo"]
+    multi = int((com_msg.motivos.str.split(";").apply(len) > 1).sum())
     return {
         "conversas": len(d),
         "mensagens": len(msgs),
@@ -336,10 +345,120 @@ def bloco_metodologia(origem: Path, d: pd.DataFrame, fila: list[dict]) -> dict:
         "fila_em_aberto": len(fila),
         "tags_manuais_existentes": int(tags.nunique()),
         "conversas_com_tag": len(tags),
+        "tags_manuais_distribuicao": [{"tag": t, "conversas": int(n)} for t, n in tags.value_counts().items()],
+        "conversas_multimotivo": multi,
+        "pct_multimotivo": frac(multi, len(com_msg)),
+        "pedidos_faturados_periodo": PEDIDOS_FATURADOS_PERIODO,
         "custo_por_canal": {c: CUSTO_CONVERSA[c] for c in ("whatsapp", "email", "reclame_aqui")},
         "categorias_taxonomia": len(CATEGORIAS),
         "motivos_taxonomia": len(MOTIVOS_ROTULO),
     }
+
+
+def bloco_parametros(origem: Path) -> dict:
+    """Parâmetros do método lidos do CÓDIGO: a página Metodologia nunca diverge do que o agente faz."""
+    import inspect
+
+    from atendimento.lote import ClassificadorLote
+    from atendimento.servicos.classificacao import MODELO_PADRAO
+    from atendimento.servicos.redacao import MODELO_REDACAO
+
+    amostra = origem / "dados" / "amostra_redacao.jsonl"
+    redacao = None
+    if amostra.exists():
+        origens = [json.loads(linha)["origem"] for linha in amostra.read_text(encoding="utf-8").splitlines()]
+        redacao = {"testadas": len(origens), "aceitas": sum(o == "llm" for o in origens)}
+    return {
+        "pesos_prioridade": PESOS_PRIORIDADE,
+        "fator_motivos_secundarios": FATOR_MOTIVOS_SECUNDARIOS,
+        "valor_teto_prioridade": VALOR_TETO_PRIORIDADE,
+        "limite_valor_automatico": LIMITE_VALOR_AUTOMATICO,
+        "sla_horas": SLA_HORAS,
+        "gravidade": sorted(({"motivo": m, "rotulo": MOTIVOS_ROTULO[m], "categoria": MOTIVO_PARA_CATEGORIA[m],
+                              "gravidade": GRAVIDADE[m]} for m in GRAVIDADE), key=lambda x: (-x["gravidade"], x["rotulo"])),
+        "politicas": [{"id": pol.id, "texto": pol.texto, "acao": pol.acao, "prazo_dias": pol.prazo_dias,
+                       "exige_foto": pol.exige_foto,
+                       "motivos": [m for m, pid in MOTIVO_PARA_POLITICA.items() if pid == pol.id]}
+                      for pol in POLITICAS.values()],
+        "sempre_humano": sorted(SEMPRE_HUMANO),
+        "modelo_classificacao": MODELO_PADRAO,
+        "modelo_redacao": MODELO_REDACAO,
+        "tamanho_grupo_lote": inspect.signature(ClassificadorLote).parameters["tamanho_grupo"].default,
+        "redacao_amostra": redacao,
+    }
+
+
+# parametros.md: "Os agentes atendem das 8h às 20h ... Fora desse horário, só o bot responde."
+HORARIO_COMERCIAL = {"inicio": 8, "fim": 20}
+MOTIVOS_ENTREGA = {"atraso", "rastreio_status"}
+
+
+def bloco_extras(origem: Path, d: pd.DataFrame, historico: list[dict]) -> dict:
+    """Três perguntas a mais (pedido do Caio): fora do horário, transportadoras e Reclame Aqui com contato anterior.
+
+    Tudo é contagem sobre os CSVs e a classificação salva; nenhuma chamada a LLM.
+    """
+    msgs = pd.read_csv(origem / "case_atendimento" / "mensagens.csv", usecols=["conversation_id", "autor", "timestamp"],
+                       parse_dates=["timestamp"]).sort_values("timestamp")
+    ped = pd.read_csv(origem / "case_atendimento" / "pedidos.csv")
+
+    # --- A · fora do horário: hora da PRIMEIRA mensagem do cliente ---------------------------------
+    primeira = msgs[msgs.autor == "cliente"].groupby("conversation_id").timestamp.min()
+    base = d[d.conversation_id.isin(primeira.index)].copy()
+    base["hora"] = base.conversation_id.map(primeira).dt.hour
+    ini, fim = HORARIO_COMERCIAL["inicio"], HORARIO_COMERCIAL["fim"]
+    base["fora"] = (base.hora < ini) | (base.hora >= fim)
+    modo = {r["conversation_id"]: r["modo"] for r in historico}
+    base["automatica"] = base.conversation_id.map(modo).eq("automatico")
+    fora = base[base.fora]
+    por_hora = base.hora.value_counts()
+    fora_do_horario = {
+        "horario_comercial": HORARIO_COMERCIAL,
+        "conversas_base": len(base),
+        "fora": len(fora),
+        "pct_fora": frac(len(fora), len(base)),
+        "por_canal": [{"canal": c, "rotulo": CANAIS[c], "conversas": len(g), "fora": int(g.fora.sum()),
+                       "pct_fora": frac(g.fora.sum(), len(g))} for c, g in base.groupby("canal")],
+        "por_hora": [{"hora": hora, "conversas": int(por_hora.get(hora, 0))} for hora in range(24)],
+        "resolviveis_fora": int(fora.automatica.sum()),
+        "pct_resolviveis_fora": frac(fora.automatica.sum(), len(fora)),
+    }
+
+    # --- B · transportadoras: fatia dos pedidos × fatia dos contatos de entrega --------------------
+    # pedidos.csv só tem pedidos de clientes que contataram: por isso comparamos FATIAS, não contatos/pedido.
+    ent = d[d.motivo_principal.isin(MOTIVOS_ENTREGA)].merge(ped[["order_id", "transportadora"]], on="order_id", how="inner")
+    itens = []
+    for t, g in ped.groupby("transportadora"):
+        contatos = ent[ent.transportadora == t]
+        itens.append({"transportadora": t, "pedidos": len(g), "pct_pedidos": frac(len(g), len(ped)),
+                      "atrasados": int((g.status_entrega == "atrasado").sum()),
+                      "pct_atrasados": frac((g.status_entrega == "atrasado").sum(), len(g)),
+                      "contatos_entrega": len(contatos), "pct_contatos_entrega": frac(len(contatos), len(ent)),
+                      "custo_entrega": reais(contatos.custo.sum())})
+    transportadoras = {"contatos_entrega_total": len(ent), "pedidos_total": len(ped),
+                       "itens": sorted(itens, key=lambda x: -x["pct_atrasados"])}
+
+    # --- C · Reclame Aqui: o cliente já tinha falado com a empresa antes? --------------------------
+    ra = d[d.canal == "reclame_aqui"]
+    anteriores = d[["customer_id", "order_id", "canal", "data_abertura"]]
+    com_antes = mesmo_pedido = barato = 0
+    custo_antes = 0.0
+    for _, x in ra.iterrows():
+        prev = anteriores[(anteriores.customer_id == x.customer_id) & (anteriores.data_abertura < x.data_abertura)]
+        if len(prev):
+            com_antes += 1
+            custo_antes += x.custo
+            mesmo_pedido += int((prev.order_id == x.order_id).any())
+            barato += int(prev.canal.isin(["whatsapp", "email"]).any())
+    reclame_aqui_antes = {
+        "conversas": len(ra),
+        "com_contato_anterior": com_antes, "pct_com_contato_anterior": frac(com_antes, len(ra)),
+        "mesmo_pedido_antes": mesmo_pedido, "pct_mesmo_pedido_antes": frac(mesmo_pedido, len(ra)),
+        "canal_barato_antes": barato, "pct_canal_barato_antes": frac(barato, len(ra)),
+        "custo_com_contato_anterior": reais(custo_antes),
+    }
+    return {"fora_do_horario": fora_do_horario, "transportadoras": transportadoras,
+            "reclame_aqui_antes": reclame_aqui_antes}
 
 
 def gerar(origem: Path, modelo: str) -> dict:
@@ -358,9 +477,10 @@ def gerar(origem: Path, modelo: str) -> dict:
         "p3_atacar_primeiro": bloco_p3(d),
         "p4_sozinho_ou_pessoa": {**bloco_p4(fila := carregar_resultados(origem)),
                                  "historico": bloco_p4_historico(
-                                     carregar_resultados(origem, "resultados_grafo_historico.jsonl"))},
+                                     historico := carregar_resultados(origem, "resultados_grafo_historico.jsonl"))},
         "saude": bloco_saude(origem, d),
-        "metodologia": bloco_metodologia(origem, d, fila),
+        "metodologia": {**bloco_metodologia(origem, d, fila), "parametros": bloco_parametros(origem)},
+        "extras": bloco_extras(origem, d, historico),
     }
 
 
@@ -390,6 +510,14 @@ REGISTRADOS = {
     "saúde: conversas": (lambda j: j["saude"]["conversas"], 65),
     "saúde: 1ª resposta pelo bot": (lambda j: j["saude"]["primeira_resposta"]["bot"], 58),
     "textos únicos classificados": (lambda j: j["metodologia"]["textos_unicos_classificados"], 1720),
+    "conversas com mais de um assunto": (lambda j: j["metodologia"]["conversas_multimotivo"], 566),
+    "pesos da prioridade somam 1": (lambda j: round(sum(j["metodologia"]["parametros"]["pesos_prioridade"].values()), 6), 1.0),
+    "limite para ação automática com custo": (lambda j: j["metodologia"]["parametros"]["limite_valor_automatico"], 200.0),
+    "motivos com gravidade": (lambda j: len(j["metodologia"]["parametros"]["gravidade"]), 25),
+    "fora do horário (20h–8h)": (lambda j: round(j["extras"]["fora_do_horario"]["pct_fora"], 2), 0.30),
+    "Reclame Aqui com contato anterior": (lambda j: round(j["extras"]["reclame_aqui_antes"]["pct_com_contato_anterior"], 2), 0.61),
+    "Reclame Aqui sobre o mesmo pedido": (lambda j: round(j["extras"]["reclame_aqui_antes"]["pct_mesmo_pedido_antes"], 2), 0.36),
+    "transportadora com mais atraso": (lambda j: j["extras"]["transportadoras"]["itens"][0]["transportadora"], "Rota Express"),
 }
 
 

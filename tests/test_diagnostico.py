@@ -55,8 +55,31 @@ CONTRATO = {
                     "conversas_com_mensagem_cliente": int, "conversas_sem_mensagem_cliente": int,
                     "textos_unicos_classificados": int, "economia_deduplicacao_pct": NUM,
                     "conversas_por_status": dict, "fila_em_aberto": int, "tags_manuais_existentes": int,
-                    "conversas_com_tag": int, "custo_por_canal": dict, "categorias_taxonomia": int,
+                    "conversas_com_tag": int, "custo_por_canal": dict,
+                    "tags_manuais_distribuicao": [{"tag": str, "conversas": int}],
+                    "conversas_multimotivo": int, "pct_multimotivo": NUM, "pedidos_faturados_periodo": int,
+                    "parametros": {"pesos_prioridade": dict, "fator_motivos_secundarios": NUM,
+                                   "valor_teto_prioridade": NUM, "limite_valor_automatico": NUM, "sla_horas": dict,
+                                   "gravidade": [{"motivo": str, "rotulo": str, "categoria": str, "gravidade": int}],
+                                   "politicas": [{"id": str, "texto": str, "acao": str, "exige_foto": bool,
+                                                  "motivos": [str]}],
+                                   "sempre_humano": [str], "modelo_classificacao": str, "modelo_redacao": str,
+                                   "tamanho_grupo_lote": int}, "categorias_taxonomia": int,
                     "motivos_taxonomia": int},
+    "extras": {
+        "fora_do_horario": {"horario_comercial": dict, "conversas_base": int, "fora": int, "pct_fora": NUM,
+                            "por_canal": [{"canal": str, "rotulo": str, "conversas": int, "fora": int, "pct_fora": NUM}],
+                            "por_hora": [{"hora": int, "conversas": int}],
+                            "resolviveis_fora": int, "pct_resolviveis_fora": NUM},
+        "transportadoras": {"contatos_entrega_total": int, "pedidos_total": int,
+                            "itens": [{"transportadora": str, "pedidos": int, "pct_pedidos": NUM, "atrasados": int,
+                                       "pct_atrasados": NUM, "contatos_entrega": int, "pct_contatos_entrega": NUM,
+                                       "custo_entrega": NUM}]},
+        "reclame_aqui_antes": {"conversas": int, "com_contato_anterior": int, "pct_com_contato_anterior": NUM,
+                               "mesmo_pedido_antes": int, "pct_mesmo_pedido_antes": NUM,
+                               "canal_barato_antes": int, "pct_canal_barato_antes": NUM,
+                               "custo_com_contato_anterior": NUM},
+    },
 }
 
 
@@ -132,6 +155,44 @@ def test_historico_saude_e_metodologia_coerentes(j):
     assert m["textos_unicos_classificados"] <= m["conversas_com_mensagem_cliente"]
     assert sum(m["mensagens_por_autor"].values()) == m["mensagens"]
     assert sum(m["conversas_por_status"].values()) == m["conversas"]
+    assert sum(x["conversas"] for x in m["tags_manuais_distribuicao"]) == m["conversas_com_tag"]
+    assert len(m["tags_manuais_distribuicao"]) == m["tags_manuais_existentes"]
+    assert m["conversas_multimotivo"] <= m["conversas_com_mensagem_cliente"]
+
+
+def test_parametros_batem_com_o_codigo(j):
+    """A Metodologia mostra os parâmetros do JSON: eles precisam ser os mesmos do código do agente."""
+    from atendimento.dominio.parametros import LIMITE_VALOR_AUTOMATICO, PESOS_PRIORIDADE
+    from atendimento.dominio.politicas import POLITICAS
+    from atendimento.dominio.taxonomia import SEMPRE_HUMANO
+    p = j["metodologia"]["parametros"]
+    assert p["pesos_prioridade"] == PESOS_PRIORIDADE and sum(p["pesos_prioridade"].values()) == pytest.approx(1)
+    assert p["limite_valor_automatico"] == LIMITE_VALOR_AUTOMATICO
+    assert {x["motivo"]: x["gravidade"] for x in p["gravidade"]} == GRAVIDADE
+    assert {x["id"] for x in p["politicas"]} == set(POLITICAS)
+    assert all(m in GRAVIDADE for pol in p["politicas"] for m in pol["motivos"])
+    assert set(p["sempre_humano"]) == SEMPRE_HUMANO
+
+
+def test_extras_coerentes(j):
+    e, h = j["extras"], j["p4_sozinho_ou_pessoa"]["historico"]
+    f = e["fora_do_horario"]
+    assert f["conversas_base"] == h["com_mensagem"]
+    assert sum(x["conversas"] for x in f["por_hora"]) == f["conversas_base"]
+    assert [x["hora"] for x in f["por_hora"]] == list(range(24))
+    assert sum(x["fora"] for x in f["por_canal"]) == f["fora"] <= f["conversas_base"]
+    assert f["resolviveis_fora"] <= f["fora"]
+    t = e["transportadoras"]
+    assert sum(x["pedidos"] for x in t["itens"]) == t["pedidos_total"]
+    assert sum(x["contatos_entrega"] for x in t["itens"]) == t["contatos_entrega_total"]
+    assert sum(x["pct_contatos_entrega"] for x in t["itens"]) == pytest.approx(1, abs=0.01)
+    assert all(x["atrasados"] <= x["pedidos"] for x in t["itens"])
+    pcts = [x["pct_atrasados"] for x in t["itens"]]
+    assert pcts == sorted(pcts, reverse=True)
+    r = e["reclame_aqui_antes"]
+    assert r["conversas"] == next(c for c in j["p1_por_que_procuram"]["canais"] if c["canal"] == "reclame_aqui")["conversas"]
+    assert r["mesmo_pedido_antes"] <= r["com_contato_anterior"] <= r["conversas"]
+    assert r["canal_barato_antes"] <= r["com_contato_anterior"]
 
 
 def test_listas_ordenadas_por_custo(j):
