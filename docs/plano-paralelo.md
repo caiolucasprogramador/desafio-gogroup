@@ -155,6 +155,14 @@ Mudança no contrato = combinar antes (o Caio avisa o outro agente).
     primeiro (bot × agente) e o tempo até um humano nas reações adversas (política: 24h).
   - `metodologia`: funil (conversas, mensagens por autor, com/sem mensagem do cliente, textos únicos após
     a deduplicação), conversas por status, fila em aberto, tags manuais, custo por canal, tamanho da taxonomia.
+- 2026-11-09: `metodologia` ganhou `tags_manuais_distribuicao`, `conversas_multimotivo`, `pct_multimotivo` e
+  `pedidos_faturados_periodo` (do parametros.md), para o Diagnóstico mostrar os dados recebidos e os problemas.
+- 2026-11-10: `metodologia.parametros` (pesos, gravidades, políticas, limite, SLAs, modelos, tamanho do lote,
+  amostra da redação), lido direto do código pelo `gerar_diagnostico`, para a página Metodologia nunca divergir
+  do agente. `tests/test_diagnostico.py::test_parametros_batem_com_o_codigo` garante isso.
+- 2026-11-11: bloco `extras` (três perguntas a mais): `fora_do_horario` (por hora e por canal, e quantas o
+  agente resolveria na hora), `transportadoras` (fatia dos pedidos × fatia dos contatos de entrega, % atrasados)
+  e `reclame_aqui_antes` (contato anterior, mesmo pedido, custo herdado). Só acréscimo.
 
 ---
 

@@ -5,9 +5,10 @@ pedido, prioriza, confere as políticas e decide: **resolve sozinho** (com a res
 **encaminha a uma pessoa** (com um dossiê do caso). Junto com ele, um diagnóstico do histórico de
 atendimento que responde, com números, às perguntas do Problema 1.
 
-- **Solução publicada (sem login):** `TODO: link da Vercel`
-  - *Diagnóstico*: as 4 respostas abaixo, com gráficos (`/diagnostico.html`)
+- **Solução publicada (sem login):** https://desafio-gogroup-orpin.vercel.app/
+  - *Diagnóstico*: o que recebemos, o que estava dando errado e as respostas abaixo, com gráficos (`/diagnostico.html`)
   - *Testar o agente*: digite uma mensagem, simule o pedido e veja cada etapa da decisão (`/`)
+  - *Metodologia*: como cada número foi medido, as decisões, o diário de problemas e as limitações (`/metodologia.html`)
 - **Repositório:** https://github.com/caiolucasprogramador/desafio-gogroup
 
 ## O problema
@@ -132,6 +133,44 @@ pessoa **só** porque um motivo não tem regra escrita, e virariam automáticas 
 
 Juntas, até **321 conversas (24% da fila)** sairiam da fila humana.
 
+**E se o agente estivesse no ar o trimestre inteiro?** Rodando o grafo nas 4.000 conversas (sem LLM,
+com a classificação já salva): das 3.541 com mensagem do cliente, **2.155 (61%) teriam sido resolvidas
+pelo agente** e 1.386 iriam para uma pessoa com dossiê; resolução completa em 43%. As outras 459 são
+abandonos no bot (o cliente não escreveu).
+
+## Mais três perguntas, além das do enunciado
+
+Surgiram no caminho e mudam o que a liderança pode fazer. Estão na Parte 4 do Diagnóstico.
+
+### A. Quantos clientes escrevem quando só o bot responde?
+
+Os atendentes trabalham das 8h às 20h. **30% das conversas começam fora desse horário** (1.071 de
+3.541), em proporção igual nos três canais. Na simulação do trimestre, o agente teria resolvido
+**60% delas na hora** (639), em vez de deixar para o dia seguinte. É o argumento mais direto a favor de
+um agente: o cliente escreve a qualquer hora; o atendimento, não.
+
+### B. Qual transportadora gera mais atraso e mais contato?
+
+| Transportadora | Fatia dos pedidos | Pedidos atrasados | Fatia dos contatos sobre entrega |
+|---|---:|---:|---:|
+| **Rota Express** | 35% | **7,7%** | **62%** |
+| Postal Nacional | 17% | 2,8% | 10% |
+| Entrega Já | 16% | 2,7% | 9% |
+| Veloz Log | 16% | 2,3% | 10% |
+| Carga Norte | 16% | 2,1% | 9% |
+
+A Rota Express atrasa três vezes mais que as outras e gera 815 contatos de entrega no trimestre
+(R$ 25.013 em atendimento). É um número para levar à mesa de negociação logística. Como o arquivo de
+pedidos só tem pedidos de clientes que contataram, comparamos fatias, e não "contatos por pedido".
+
+### C. Quem foi ao Reclame Aqui já tinha falado com a gente?
+
+Das 407 conversas do Reclame Aqui, **61% (249) vieram de clientes que já tinham aberto uma conversa
+antes**, 58% por WhatsApp ou e-mail; **36% (147) eram sobre o mesmo pedido**. O canal mais caro é, em
+boa parte, a segunda tentativa de quem não foi resolvido na primeira: **R$ 31.374** no trimestre em
+Reclame Aqui de clientes que a empresa já conhecia. Resolver na primeira conversa é a forma mais barata
+de reduzir o canal mais caro.
+
 ## Como o agente funciona
 
 Um grafo [LangGraph](https://langchain-ai.github.io/langgraph/) com nós finos que chamam serviços:
@@ -172,7 +211,12 @@ para revisão humana.
   motivos 98,3%; saúde detectada em 14 de 14. Se a tag "acertar" quando bate com *qualquer* motivo da
   conversa, ela chega a 60,6%.
 - **Fila:** o grafo completo rodou nas 1.337 conversas pendentes ou reabertas, sem LLM (classificação
-  do cache, resto determinístico).
+  do cache, resto determinístico). O "trimestre inteiro" é o mesmo grafo nas 4.000 conversas
+  (`scripts/processar_fila.py --todas`).
+- **Perguntas extras:** fora do horário = hora da primeira mensagem do cliente antes das 8h ou a partir
+  das 20h; contato de entrega = motivo principal atraso ou rastreio com pedido vinculado; contato
+  anterior = outra conversa do mesmo cliente aberta antes, em qualquer canal. Definições completas na
+  página Metodologia.
 - **Diagnóstico:** `scripts/gerar_diagnostico.py` gera `public/diagnostico.json` só com agregados e se
   recusa a gravar se encontrar ID do case, dado pessoal ou qualquer sequência de 6 palavras copiada de
   uma mensagem. `tests/test_diagnostico.py` valida o formato e a privacidade do arquivo publicado.
@@ -198,6 +242,8 @@ no site**: os CSVs, o PDF e tudo o que é derivado deles (`case_*/`, `dados/`) f
 deploy. O que é publicado:
 
 - `public/diagnostico.json`: só agregados (contagens, custos, percentuais), sem IDs nem textos;
+- `scripts/rotulos_propostos.py`: os rótulos do gabarito, só com o identificador de cada conversa e os
+  motivos atribuídos, sem nenhum texto;
 - a tela *Testar o agente*: usa a mensagem que você digita e um **pedido simulado**; os exemplos
   prontos foram escritos à mão.
 

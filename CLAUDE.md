@@ -46,6 +46,9 @@ regras_fixas ─┬─(saúde / Reclame Aqui)→ escalar_humano → END
 | `atendimento/lote.py` | classificação em lote com cache JSONL (histórico de 4.000 conversas já classificado) |
 | `atendimento/api/` | FastAPI: `POST /api/atender`, `GET /api/exemplos`, `GET /api/opcoes`, limitador de requisições |
 | `public/index.html` | tela "Testar o agente" (HTML + JS puros, sem build) |
+| `public/diagnostico.html` | Diagnóstico em 3 partes (dados recebidos, problemas provados, respostas às 4 perguntas) |
+| `public/metodologia.html` | Metodologia: como cada número foi medido, decisões, diário de problemas e limitações |
+| `public/diagnostico.json` | Único arquivo de números do site (só agregados), gerado por `scripts/gerar_diagnostico.py` |
 | `main.py` | ponto de entrada da Vercel (reexporta o app) |
 | `scripts/` | lote, avaliação, fila priorizada, processamento da fila, amostra de redação |
 | `tests/` | pytest sem LLM e sem CSV |
@@ -120,6 +123,14 @@ números abaixo a cada execução e marca ✗ o que mudar). Se um número mudar,
 - **Metodologia:** 14.559 mensagens (cliente 5.684, agente 5.282, bot 3.593); deduplicação: 3.541 conversas
   com mensagem → 1.720 textos únicos (51% menos chamadas ao LLM; troca datas, nº de pedido e dados pessoais
   por marcadores só para achar textos repetidos, toda conversa recebe a sua classificação).
+- **Etiquetas manuais:** 13 tags, uma por conversa; 3.692 das 4.000 têm tag. **566 conversas (16%)** têm mais
+  de um assunto, mas a tag guarda só um. Tags genéricas (Outros 248 + Dúvida 239) = 487 (13%).
+- **Taxa de contato:** ~166 mil pedidos faturados no período (parametros.md) contra ~12 mil conversas:
+  1 contato a cada ~14 pedidos.
+- **Três perguntas extras (Parte 4 do Diagnóstico):** 30% das conversas começam fora do horário (20h–8h);
+  o agente resolveria 60% delas na hora. Rota Express: 7,7% de pedidos atrasados (outras 2–3%), 35% dos
+  pedidos e 62% dos contatos de entrega. Reclame Aqui: 61% já tinham contato antes, 36% sobre o mesmo
+  pedido, R$ 31.374 "herdados".
 - Políticas faltantes = conversas humanas cujo **único** bloqueio é esse motivo (virariam automáticas
   com a política): brinde faltante 88, dúvida de produto 85, insatisfação 53, troca (exceto fragrância) 28,
   pagamento não confirmado 24, cupom 22, cashback 15, frete grátis 6.
@@ -140,7 +151,7 @@ os clientes nos procuram, nem do que fazer a respeito."*
 | Agente de IA com ação útil | ✅ classifica, decide e responde ou encaminha com dossiê |
 | Link público sem login | ✅ publicado na Vercel (confirmar que o "Atender" funciona lá com as chaves) |
 | Repositório público no GitHub | ❌ ainda privado |
-| Respostas com números | 🟡 `public/diagnostico.json` (agregados reais) e README prontos; falta a página Diagnóstico |
+| Respostas com números | ✅ páginas Diagnóstico e Metodologia (agregados de `public/diagnostico.json`) e README |
 
 ### Perguntas de referência do enunciado → nossa resposta (já calculada)
 
@@ -153,23 +164,16 @@ os clientes nos procuram, nem do que fazer a respeito."*
 
 ### Tarefas, em ordem
 
-1. **Página "Diagnóstico" no site** (prioridade máxima).
-   - Script em `scripts/` que lê os dados locais e gera um JSON **só com agregados** (totais e
-     percentuais por motivo, canal, custo, automático × humano). Nenhum texto de conversa, nenhum
-     ID de cliente, pedido ou conversa. Esse JSON é versionado e servido com a página.
-   - Página que lê o JSON e responde às 4 perguntas acima com números e gráficos.
-   - Navegação entre "Diagnóstico" e "Testar o agente".
-   - Antes de publicar: confirmar com o Caio que os agregados podem ir para o site (ele havia
-     decidido publicar só a tela do agente para não expor conversas; agregados não expõem nenhuma).
-2. **README**: o problema, as respostas às 4 perguntas com os mesmos números, arquitetura,
-   limitações, como rodar e os dois links.
-3. **Repositório público**: antes, o Caio decide se `scripts/rotulos_propostos.py` fica (contém só
+Feito: Diagnóstico em 3 partes, Metodologia (como medimos, decisões, diário de problemas, limitações),
+grafo nas 4.000 conversas, agregados com checagem de privacidade, navegação entre as 3 páginas.
+
+1. **README**: pronto com os números atuais e as 3 perguntas extras; link da Vercel: https://desafio-gogroup-orpin.vercel.app/
+2. **Repositório público**: antes, o Caio decide se `scripts/rotulos_propostos.py` fica (contém só
    IDs de conversa e rótulos do gabarito, sem texto; sugestão: manter e explicar no README).
    Depois: GitHub → Settings → Change visibility → Public.
-4. **Frontend mais agradável** (`public/index.html`): carregamento com os nós acendendo, introdução
-   curta do que o avaliador está vendo, link para o repositório, comparação template × LLM lado a lado.
-   Manter: tema claro/escuro, funcionar no celular, escapar todo texto vindo da API (sem `innerHTML`).
-5. *(Opcional)* Fazer o Reclame Aqui passar pelo `decidir` antes de ir para humano (o dossiê ganharia
+3. **Tela "Testar o agente"** (`public/index.html`): carregamento com os nós acendendo, comparação
+   template × LLM lado a lado. Manter: tema claro/escuro, celular, sem `innerHTML`.
+4. *(Opcional)* Fazer o Reclame Aqui passar pelo `decidir` antes de ir para humano (o dossiê ganharia
    ações sugeridas).
 
 ### Orquestração entre agentes
