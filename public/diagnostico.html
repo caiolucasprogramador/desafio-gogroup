@@ -3,213 +3,311 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Diagnóstico do Atendimento · Desafio AI-First</title>
+<title>Diagnóstico do Atendimento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+/* Paleta categórica validada (dataviz/validate_palette.js): ordem fixa c1→c4, claro e escuro. */
 :root {
-  --bg: #f6f4f8; --surface: #ffffff; --surface-2: #f0edf4; --line: #e2dde9;
-  --fg: #1d1823; --muted: #6b6475; --faint: #9a93a5;
-  --accent: #6d3fc0; --accent-soft: #ece4fa; --accent-fg: #ffffff;
+  --bg: #f5f6f8; --surface: #ffffff; --surface-2: #eef1f5; --line: #dee3ea;
+  --fg: #161a22; --muted: #5f6573; --faint: #8e95a2;
+  --accent: #0062b1; --accent-soft: #ddebf8; --accent-fg: #ffffff;
   --auto: #1f7a55; --auto-soft: #def3e9;
   --human: #b4561b; --human-soft: #fbe9dc;
   --warn: #8a6a00; --warn-soft: #f8f0cf;
   --bad: #b3263a; --bad-soft: #fbe2e6;
-  --f1: #6d3fc0; --f2: #2f7fb5; --f3: #1f9a8a; --f4: #c9821b; --f5: #b84a7a; --f6: #7d8590;
-  --shadow: 0 1px 2px rgba(40, 20, 70, .06), 0 4px 16px rgba(40, 20, 70, .05);
+  --c1: #0062b1; --c2: #e05aae; --c3: #e0583a; --c4: #1e9e9e; --c0: #b4bac4;
+  --shadow: 0 1px 2px rgba(10, 30, 60, .06), 0 4px 16px rgba(10, 30, 60, .05);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
-    --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
-    --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+    --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+    --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+    --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
     --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
     --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
-    --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+    --c1: #3a86cf; --c2: #cf4399; --c3: #d9663f; --c4: #2aa8a8; --c0: #444c58;
     --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
-  --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
-  --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+  --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+  --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+  --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
   --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
   --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
-  --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+  --c1: #3a86cf; --c2: #cf4399; --c3: #d9663f; --c4: #2aa8a8; --c0: #444c58;
   --shadow: none; color-scheme: dark;
 }
+/* Faixa com as cores da identidade Gocase (só as cores; nenhuma marca, logo ou forma) */
+:root { --g-azul: #0062b1; --g-magenta: #ee3fac; --g-coral: #ff6e50; --g-turquesa: #78d8d8; --g-amarelo: #eeee96; --g-rosa: #ffd1dc; }
+body::before { content: ""; display: block; height: 6px;
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  background: linear-gradient(90deg, var(--g-azul) 0 16.66%, var(--g-magenta) 0 33.33%, var(--g-coral) 0 50%,
+                                     var(--g-turquesa) 0 66.66%, var(--g-amarelo) 0 83.33%, var(--g-rosa) 0); }
+
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 html, body { margin: 0; overflow-x: hidden; }
 body {
   background: var(--bg); color: var(--fg);
-  font: 15px/1.55 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 15px/1.6 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 24px 64px; display: grid; gap: 22px; min-width: 0; }
-h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.25; }
-h1 { font-size: 1.65rem; font-weight: 700; letter-spacing: -.01em; }
-h2.eyebrow { font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-h2.pergunta { font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; color: var(--fg); }
-h3 { font-size: .88rem; font-weight: 600; color: var(--muted); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 22px 64px; display: grid; gap: 28px; min-width: 0; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
 p { margin: 0; }
-.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; }
+a { color: var(--accent); }
 .muted { color: var(--muted); }
 .num { font-variant-numeric: tabular-nums; }
+.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; }
 
-/* barra superior e navegação */
+/* ---------- navegação ---------- */
 .topbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
 .nav-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border: 1px solid var(--line);
             border-radius: 999px; padding: 4px; box-shadow: var(--shadow); }
-.nav-tab { text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 600;
-           padding: 6px 14px; border-radius: 999px; transition: all .15s ease; }
+.nav-tab { text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; }
 .nav-tab:hover { color: var(--fg); }
 .nav-tab.ativo { background: var(--accent); color: var(--accent-fg); }
-.acoes-topo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.nav-tab.breve { color: var(--faint); cursor: default; }
+.acoes-topo { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn-topo { font: inherit; font-size: .8rem; font-weight: 500; color: var(--muted); background: var(--surface);
-            border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+            border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; text-decoration: none; }
 .btn-topo:hover { color: var(--fg); border-color: var(--accent); }
 
-/* faixa discreta de dados de exemplo */
-.faixa-exemplo { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn);
-                 border-radius: 10px; padding: 8px 14px; font-size: .82rem; display: flex;
-                 flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
-.faixa-exemplo b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: .74rem; }
+/* ---------- abertura ---------- */
+.hero { display: grid; gap: 14px; padding-block: 18px 6px; }
+.hero .tag { font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { font-size: clamp(1.7rem, 4.2vw, 2.6rem); font-weight: 700; letter-spacing: -.02em; max-width: 22ch; }
+.hero .sub { font-size: 1.08rem; color: var(--muted); max-width: 60ch; }
+.sumario { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.sumario a { text-decoration: none; display: inline-flex; gap: 8px; align-items: baseline; padding: 8px 14px; border-radius: 12px;
+             background: var(--surface); border: 1px solid var(--line); color: var(--fg); font-weight: 600; font-size: .88rem; }
+.sumario a:hover { border-color: var(--accent); }
+.sumario a small { color: var(--accent); font-weight: 700; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; }
 
-header { display: grid; gap: 8px; }
-header .sub { color: var(--muted); max-width: 78ch; font-size: .98rem; line-height: 1.55; }
-.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
-       background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 600; width: fit-content; }
+/* ---------- atos ---------- */
+.ato { display: grid; gap: 18px; scroll-margin-top: 16px; }
+.ato-cab { display: grid; gap: 6px; border-top: 2px solid var(--fg); padding-top: 14px; }
+.ato-cab .eyebrow { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.ato-cab h2 { font-size: clamp(1.35rem, 3vw, 1.8rem); font-weight: 700; letter-spacing: -.015em; }
+.ato-cab p { color: var(--muted); max-width: 68ch; }
 
-/* cards de KPIs no topo */
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 920px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
-.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
-       box-shadow: var(--shadow); display: grid; gap: 6px; align-content: start; min-width: 0; }
-.kpi .rotulo { font-size: .76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.kpi .valor { font-size: 1.85rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.kpi .valor.destaque-acc { color: var(--accent); }
-.kpi .valor.destaque-auto { color: var(--auto); }
-.kpi .detalhe { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+/* ---------- ato 1: infográfico ---------- */
+.info-grade { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.info { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow);
+        display: grid; gap: 10px; align-content: start; min-width: 0; grid-column: span 4; }
+.info.largo { grid-column: span 6; }
+.info.inteiro { grid-column: span 12; }
+@media (max-width: 980px) { .info, .info.largo { grid-column: span 6; } }
+@media (max-width: 640px) { .info, .info.largo, .info.inteiro { grid-column: span 12; } }
+.info .rot { font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.info .grande { font-size: 2.2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.info .grande small { font-size: 1rem; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.info .leg { font-size: .88rem; color: var(--muted); }
+.info .leg b { color: var(--fg); }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
-        box-shadow: var(--shadow); display: grid; gap: 16px; min-width: 0; align-content: start; }
-@media (max-width: 520px) { .card { padding: 16px 14px; } }
-.secao-topo { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; justify-content: space-between; }
-.secao-topo .num-pergunta { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-                            color: var(--accent); display: block; margin-bottom: 4px; }
-.secao-sub { color: var(--muted); font-size: .9rem; max-width: 75ch; }
+.linha-tempo { display: grid; gap: 4px; }
+.linha-tempo .trilho { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--c1), var(--c3)); }
+.linha-tempo .pontas { display: flex; justify-content: space-between; font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* alternador e legenda em P1 */
-.controles-p1 { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.pessoas { display: flex; gap: 6px; align-items: flex-end; }
+.pessoas svg { width: 30px; height: 38px; }
+.pessoas .sel { color: var(--accent); }
+.pessoas .fora { color: var(--c0); }
+
+.grade-pontos { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; max-width: 280px; }
+.grade-pontos i { aspect-ratio: 1; border-radius: 3px; background: var(--c0); display: block; }
+.grade-pontos i.sel { background: var(--accent); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .78rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--surface-2);
+        border: 1px solid var(--line); color: var(--fg); }
+.chip.acc { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip b { font-variant-numeric: tabular-nums; }
+
+/* barra empilhada genérica (2px de respiro entre segmentos, pontas arredondadas) */
+.pilha { display: flex; gap: 2px; height: 16px; border-radius: 4px; overflow: hidden; }
+.pilha > div { height: 100%; min-width: 3px; }
+.pilha.alta { height: 28px; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.qd { width: 10px; height: 10px; border-radius: 3px; flex: none; display: inline-block; }
+
+.canais-lista { display: grid; gap: 10px; }
+.canal-linha { display: grid; grid-template-columns: minmax(0, 7.5em) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .86rem; }
+.canal-linha .nome { font-weight: 600; }
+.canal-linha .preco { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trilho-b { height: 10px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.trilho-b > div { height: 100%; border-radius: 0 4px 4px 0; }
+.canal-linha .vol { font-size: .76rem; color: var(--muted); }
+
+.conta { display: grid; gap: 6px; font-size: .86rem; font-variant-numeric: tabular-nums; }
+.conta .lin { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.conta .lin span:first-child { color: var(--muted); }
+.conta .tot { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; font-size: 1rem; }
+
+/* ---------- ato 2: problemas ---------- */
+.prob-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .prob-grade { grid-template-columns: minmax(0, 1fr); } }
+.prob { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow);
+        display: grid; gap: 14px; align-content: start; min-width: 0; border-top: 4px solid var(--human); }
+.prob .n { font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--human); }
+.prob h3 { font-size: 1.15rem; font-weight: 700; letter-spacing: -.01em; }
+.prob .txt { color: var(--muted); font-size: .92rem; }
+.prova { background: var(--surface-2); border-radius: 12px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.prova .rot { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.feito { border-left: 3px solid var(--auto); padding-left: 12px; font-size: .9rem; display: grid; gap: 2px; }
+.feito b { color: var(--auto); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.como-medimos { font-size: .84rem; font-weight: 600; text-decoration: none; justify-self: start; }
+.como-medimos:hover { text-decoration: underline; }
+
+.comp-barra { display: grid; grid-template-columns: minmax(0, 8.5em) minmax(0, 1fr) 3.6em; gap: 10px; align-items: center; font-size: .86rem; }
+.comp-barra .v { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.duas { display: grid; gap: 8px; }
+
+.mini-barras { display: grid; gap: 4px; }
+.mini-barras .lin { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 2.8em; gap: 8px; align-items: center; font-size: .78rem; }
+.mini-barras .lin.gen .nm { color: var(--human); font-weight: 700; }
+.mini-barras .v { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.destaque-num { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; }
+.destaque-num .g { font-size: 2.4rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.destaque-num .zero { color: var(--human); }
+.par-num { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.par-num > div { display: grid; gap: 4px; align-content: start; }
+.par-num .g { font-size: 2.4rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.par-num .g.zero { color: var(--human); }
+.par-num .leg { font-size: .84rem; color: var(--muted); }
+.destaque-num span.leg { font-size: .86rem; color: var(--muted); max-width: 22ch; }
+
+.regua { display: grid; gap: 6px; }
+.regua .eixo { position: relative; height: 34px; }
+.regua .base { position: absolute; left: 0; right: 0; top: 14px; height: 6px; border-radius: 3px; background: var(--c0); }
+.regua .marca { position: absolute; top: 4px; width: 3px; height: 26px; border-radius: 2px; transform: translateX(-50%); }
+.regua .rotulos { position: relative; height: 18px; font-size: .74rem; color: var(--muted); }
+.regua .rotulos span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+
+.funil { display: grid; gap: 6px; }
+.funil .et { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; font-size: .84rem; }
+.funil .et .b { grid-column: 1 / -1; height: 14px; border-radius: 4px; }
+.funil .et .q { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- ato 3: respostas ---------- */
+.resp { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; box-shadow: var(--shadow);
+        display: grid; gap: 18px; min-width: 0; scroll-margin-top: 16px; }
+@media (max-width: 520px) { .resp, .prob, .info { padding: 16px 14px; } }
+.resp .n { font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.resp h3.perg { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; margin-top: 4px; }
+.resposta { background: var(--accent-soft); border-radius: 12px; padding: 14px 16px; font-size: 1.02rem; line-height: 1.5; }
+.resposta b { color: var(--accent); }
+.insights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .insights { grid-template-columns: minmax(0, 1fr); } }
+.insight { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.insight .rot { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.insight .val { font-size: 1.15rem; font-weight: 700; }
+.insight .det { font-size: .84rem; color: var(--muted); }
+
+.controles { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
 .seg-group { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
-.seg-btn { font: inherit; font-size: .78rem; font-weight: 600; border: 0; background: transparent; color: var(--muted);
-           padding: 5px 11px; border-radius: 6px; cursor: pointer; }
+.seg-btn { font: inherit; font-size: .8rem; font-weight: 600; border: 0; background: transparent; color: var(--muted);
+           padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 .seg-btn.ativo { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-.legenda-barras { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .8rem; color: var(--muted); }
-.legenda-barras span { display: inline-flex; align-items: center; gap: 6px; }
-.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
-.dot.vol { background: var(--f2); }
-.dot.cus { background: var(--accent); }
 
-/* barras comparativas (% conversas vs % custo) */
 .lista-comparativa { display: grid; gap: 12px; min-width: 0; }
 .item-comp { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); min-width: 0; }
 .item-comp:last-child { border-bottom: 0; padding-bottom: 0; }
 .item-comp .cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
-.item-comp .nome { font-weight: 600; font-size: .92rem; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.item-comp .metricas { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 6px 12px; }
-.dupla-barra { display: grid; gap: 5px; }
-.linha-barra { display: grid; grid-template-columns: 4.6em 1fr 3.4em; gap: 8px; align-items: center; font-size: .76rem; }
+.item-comp .nome { font-weight: 600; font-size: .92rem; }
+.item-comp .metricas { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.linha-barra { display: grid; grid-template-columns: 4.8em minmax(0, 1fr) 3.4em; gap: 8px; align-items: center; font-size: .76rem; }
 .linha-barra .rot { color: var(--muted); }
-.linha-barra .trilho-b { height: 9px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.linha-barra .preenchimento { height: 100%; border-radius: 999px; }
-.linha-barra .preenchimento.vol { background: var(--f2); }
-.linha-barra .preenchimento.cus { background: var(--accent); }
 .linha-barra .pct { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mais { font: inherit; font-size: .82rem; font-weight: 600; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 0; justify-self: start; }
 
-.pill { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
-        letter-spacing: .02em; font-style: normal; font-family: "Instrument Sans", system-ui, sans-serif; }
-.pill.acc { background: var(--accent-soft); color: var(--accent); }
-.pill.ok { background: var(--auto-soft); color: var(--auto); }
-.pill.hum { background: var(--human-soft); color: var(--human); }
-.pill.warn { background: var(--warn-soft); color: var(--warn); }
-.pill.sp { background: var(--surface-2); color: var(--muted); }
-
-/* tabela de canais */
 .tabela-wrap { overflow-x: auto; min-width: 0; border: 1px solid var(--line); border-radius: 11px; }
-table.canais { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums; }
-table.canais th, table.canais td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
-table.canais th { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); font-weight: 600; }
-table.canais tr:last-child td { border-bottom: 0; }
-table.canais td.dir, table.canais th.dir { text-align: right; }
-table.canais tr.destaque-ra { background: var(--human-soft); }
-@media (max-width: 520px) {
-  table.canais th, table.canais td { padding: 8px 8px; font-size: .78rem; }
-}
+table { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.dir, th.dir { text-align: right; }
 
-/* P2: contatos evitáveis */
-.grade-evitaveis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 720px) { .grade-evitaveis { grid-template-columns: minmax(0, 1fr); } }
-.card-evitavel { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
-                 display: grid; gap: 8px; align-content: start; min-width: 0; }
-.card-evitavel .topo-ev { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
-.card-evitavel .tit-ev { font-weight: 700; font-size: .96rem; }
-.card-evitavel .custo-ev { font-weight: 700; color: var(--human); font-variant-numeric: tabular-nums; font-size: .95rem; }
-.card-evitavel .acao-ev { font-size: .86rem; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
+.grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .grade-2 { grid-template-columns: minmax(0, 1fr); } }
+.cartao { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+          display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cartao .topo { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
+.cartao .tit { font-weight: 700; }
+.cartao .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cartao .por { font-size: .86rem; color: var(--muted); }
+.cartao .evitar { font-size: .86rem; border-left: 3px solid var(--auto); padding-left: 10px; }
 
-/* P3: o que atacar primeiro */
-.criterio-box { background: var(--accent-soft); color: var(--fg); border-left: 4px solid var(--accent);
-                padding: 10px 14px; border-radius: 8px; font-size: .88rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.criterio-box b { color: var(--accent); text-transform: uppercase; font-size: .74rem; letter-spacing: .06em; margin-right: 4px; }
-.lista-rank { display: grid; gap: 10px; }
-.item-rank { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;
-             background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
-@media (max-width: 560px) {
-  .item-rank { grid-template-columns: 32px 1fr; }
-  .item-rank .numeros-rank { grid-column: 2; justify-self: start; }
-}
-.bola-rank { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-fg);
-             font-weight: 700; font-size: .9rem; display: grid; place-items: center; flex: none; }
-.corpo-rank { display: grid; gap: 3px; min-width: 0; }
-.corpo-rank .foco { font-weight: 700; font-size: .96rem; }
-.corpo-rank .porque { font-size: .85rem; color: var(--muted); }
-.numeros-rank { text-align: right; font-variant-numeric: tabular-nums; display: grid; gap: 2px; }
-@media (max-width: 560px) { .numeros-rank { text-align: left; display: flex; gap: 10px; align-items: baseline; } }
-.numeros-rank .custo { font-weight: 700; font-size: .95rem; }
-.numeros-rank .conv { font-size: .78rem; color: var(--muted); }
+.dispersao-wrap { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .dispersao-wrap { grid-template-columns: minmax(0, 1fr); } }
+.dispersao { overflow-x: auto; min-width: 0; padding-bottom: 4px; }
+.dispersao svg { width: 100%; min-width: 560px; height: auto; display: block; overflow: visible; }
+.dispersao .grade { stroke: var(--line); stroke-width: 1; }
+.dispersao .div { stroke: var(--faint); stroke-width: 1; stroke-dasharray: 4 4; }
+.dispersao .eixo-txt { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.dispersao .quad-txt { fill: var(--faint); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-family: inherit; }
+.dispersao .rot-ponto { fill: var(--fg); font-size: 11px; font-weight: 600; font-family: inherit; }
+.dispersao circle { stroke: var(--surface); stroke-width: 2; cursor: default; }
+.lista-rank { display: grid; gap: 10px; counter-reset: rk; }
+.item-rank { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start;
+             background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.bola-rank { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-fg);
+             font-weight: 700; font-size: .85rem; display: grid; place-items: center; }
+.item-rank .foco { font-weight: 700; }
+.item-rank .porque { font-size: .84rem; color: var(--muted); }
+.item-rank .nums { font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* P4: sozinho vs pessoa */
-.barra-divisao { display: grid; gap: 8px; }
-.barra-divisao .rotulos-div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: .9rem; font-weight: 600; }
-.barra-divisao .rot-auto { color: var(--auto); }
-.barra-divisao .rot-hum { color: var(--human); }
-.trilho-div { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: var(--surface-2); gap: 3px; }
-.trilho-div .seg-auto { background: var(--auto); height: 100%; }
-.trilho-div .seg-hum { background: var(--human); height: 100%; }
-.nota-resolucao { font-size: .84rem; color: var(--muted); }
+.colunas-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 960px) { .colunas-3 { grid-template-columns: minmax(0, 1fr); } }
+.lista-s { display: grid; gap: 8px; font-size: .86rem; }
+.lista-s .lin { display: grid; gap: 4px; }
+.lista-s .topo { display: flex; justify-content: space-between; gap: 8px; }
+.lista-s .v { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lista-s .sug { font-size: .8rem; color: var(--muted); }
+.regra-box { border: 1px solid var(--human); background: var(--human-soft); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; font-size: .9rem; }
+.regra-box b { color: var(--human); }
 
-.colunas-p4 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 960px) { .colunas-p4 { grid-template-columns: minmax(0, 1fr); } }
-.bloco-p4 { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
-            display: grid; gap: 10px; align-content: start; min-width: 0; }
-.lista-simples { display: grid; gap: 8px; font-size: .86rem; }
-.linha-simples { display: grid; gap: 4px; padding-bottom: 7px; border-bottom: 1px dashed var(--line); }
-.linha-simples:last-child { border-bottom: 0; padding-bottom: 0; }
-.linha-simples .topo-s { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.linha-simples .rot-s { font-weight: 500; }
-.linha-simples .val-s { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.linha-simples .sug-s { font-size: .8rem; color: var(--muted); }
+/* ---------- parte 4: três perguntas a mais ---------- */
+.horas { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; align-items: end; height: 130px; }
+.horas div { background: var(--c1); border-radius: 3px 3px 0 0; min-height: 2px; }
+.horas div.fora { background: var(--human); }
+.horas-rot { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; font-size: .68rem; color: var(--muted); text-align: center; }
+.transp { display: grid; gap: 12px; }
+.transp .lin { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.transp .lin:last-child { border-bottom: 0; padding-bottom: 0; }
+.transp .cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; justify-content: space-between; }
+.transp .nome { font-weight: 700; display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.funil-ra { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .funil-ra { grid-template-columns: minmax(0, 1fr); } }
+.funil-ra > div { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.funil-ra .g { font-size: 2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.funil-ra .p { font-size: .86rem; color: var(--muted); }
+.funil-ra .seta { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+/* "como ler" e "de onde vem" */
+details.como-ler { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: .88rem; }
+details.como-ler summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+details.como-ler p { margin-top: 8px; color: var(--muted); }
+.de-onde { font-size: .8rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+.de-onde b { color: var(--fg); }
+
+/* tooltip único */
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--fg); color: var(--bg); font-size: .8rem;
+       padding: 6px 10px; border-radius: 8px; max-width: 260px; line-height: 1.4; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+[data-tip] { cursor: default; }
 
 .erro { background: var(--bad-soft); color: var(--bad); border-radius: 11px; padding: 14px 16px; }
-
-footer { color: var(--faint); font-size: .82rem; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
-footer a:hover { text-decoration: underline; }
+footer { color: var(--muted); font-size: .84rem; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 </style>
 </head>
 <body>
@@ -218,38 +316,35 @@ footer a:hover { text-decoration: underline; }
     <div class="nav-tabs">
       <a class="nav-tab ativo" href="diagnostico.html" aria-current="page">Diagnóstico</a>
       <a class="nav-tab" href="index.html">Testar o agente</a>
+      <a class="nav-tab" href="metodologia.html">Metodologia</a>
     </div>
     <div class="acoes-topo">
-      <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Repositório GitHub ↗</a>
+      <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
       <button type="button" class="btn-topo" id="btn-tema" aria-label="Alternar tema claro ou escuro">Tema</button>
     </div>
   </nav>
 
-  <div id="aviso-exemplo" class="faixa-exemplo" hidden>
-    <span><b>Dados de exemplo</b> · Os valores exibidos abaixo seguem o contrato de demonstração e serão substituídos pelos agregados finais.</span>
-    <span class="mono" id="meta-exemplo"></span>
-  </div>
-
-  <header>
-    <span class="tag">Desafio AI-First · Problema 1 · Visão da Liderança</span>
-    <h1>Diagnóstico do Atendimento</h1>
-    <p class="sub" id="frase-tese">Carregando diagnóstico das conversas de atendimento…</p>
-    <p class="muted" id="nota-amostra" style="font-size:.82rem"></p>
+  <header class="hero">
+    <span class="tag">Desafio AI-First · Atendimento Gocase e GoBeauté</span>
+    <h1>Por que os clientes procuram o atendimento, e o que fazer a respeito</h1>
+    <p class="sub" id="hero-sub">Um agente de IA leu as conversas do trimestre. Isto é o que ele encontrou, em números.</p>
+    <nav class="sumario" aria-label="Seções">
+      <a href="#dados"><small>1</small>O que recebemos</a>
+      <a href="#problemas"><small>2</small>O que estava dando errado</a>
+      <a href="#respostas"><small>3</small>As respostas</a>
+      <a href="#extras"><small>4</small>Três perguntas a mais</a>
+    </nav>
   </header>
 
-  <section id="kpis" class="kpis" aria-label="Indicadores principais"></section>
+  <main id="conteudo" style="display:grid;gap:40px;min-width:0"></main>
 
-  <main id="conteudo" style="display:grid;gap:22px;min-width:0"></main>
-
-  <footer id="rodape">
-    <p id="obs-classificacao"></p>
-    <p>Outras limitações conhecidas: ausência de data de recebimento nas transportadoras (usamos janela segura da compra), cálculo de SLA em horas corridas e pesos de priorização definidos por regra de negócio.</p>
-    <p>Dados agregados, sem nenhum texto de conversa, CPF, pedido ou identificador de cliente · <a href="index.html">Testar o agente ao vivo →</a> · <a href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Código no GitHub ↗</a></p>
-  </footer>
+  <footer id="rodape"></footer>
 </div>
+<div id="tip" hidden></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
 function h(tag, attrs = {}, ...filhos) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -257,402 +352,658 @@ function h(tag, attrs = {}, ...filhos) {
     else if (k === "style") el.style.cssText = v;
     else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
   }
-  for (const f of filhos.flat()) {
-    if (f !== null && f !== undefined && f !== false) {
-      el.append(f instanceof Node ? f : document.createTextNode(String(f)));
-    }
-  }
+  for (const f of filhos.flat()) if (f !== null && f !== undefined && f !== false)
+    el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+  return el;
+}
+function s(tag, attrs = {}, ...filhos) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) if (v !== null && v !== undefined) el.setAttribute(k, v);
+  for (const f of filhos.flat()) if (f !== null && f !== undefined)
+    el.append(f instanceof Node ? f : document.createTextNode(String(f)));
   return el;
 }
 
 const intBR = (v) => v == null ? "—" : Number(v).toLocaleString("pt-BR");
-const brl = (v, centavos = false) => v == null ? "—" : Number(v).toLocaleString("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: centavos ? 2 : 0,
-  maximumFractionDigits: centavos ? 2 : 0,
-});
-const pct = (v, casas = 0) => v == null ? "—" : (Number(v) * 100).toLocaleString("pt-BR", {
-  minimumFractionDigits: casas,
-  maximumFractionDigits: casas,
-}) + "%";
+const brl = (v, cent = false) => v == null ? "—" : Number(v).toLocaleString("pt-BR",
+  { style: "currency", currency: "BRL", minimumFractionDigits: cent ? 2 : 0, maximumFractionDigits: cent ? 2 : 0 });
+const pct = (v, casas = 0) => v == null ? "—" : (Number(v) * 100).toLocaleString("pt-BR",
+  { minimumFractionDigits: casas, maximumFractionDigits: casas }) + "%";
+const milhar = (v) => "~" + Math.round(v / 1000).toLocaleString("pt-BR") + " mil";
+const dataBR = (iso) => iso ? iso.split("-").reverse().slice(0, 2).join("/") : "—";
+const METODOLOGIA = (ancora) => `metodologia.html#${ancora}`;
 
-/* Alternância de tema claro/escuro persistida */
+/* ---------- tema ---------- */
 function iniciarTema() {
-  const salvo = localStorage.getItem("tema");
-  if (salvo === "light" || salvo === "dark") {
-    document.documentElement.setAttribute("data-theme", salvo);
-  }
-  const atualizarBotao = () => {
-    const atual = document.documentElement.getAttribute("data-theme");
-    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const escuro = atual ? atual === "dark" : escuroSistema;
-    $("btn-tema").textContent = escuro ? "☀ Tema claro" : "☾ Tema escuro";
+  let salvo = null;
+  try { salvo = localStorage.getItem("tema"); } catch { /* sem storage */ }
+  if (salvo === "light" || salvo === "dark") document.documentElement.setAttribute("data-theme", salvo);
+  const escuro = () => {
+    const a = document.documentElement.getAttribute("data-theme");
+    return a ? a === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   };
-  atualizarBotao();
+  const rotulo = () => { $("btn-tema").textContent = escuro() ? "☀ Claro" : "☾ Escuro"; };
+  rotulo();
   $("btn-tema").addEventListener("click", () => {
-    const atual = document.documentElement.getAttribute("data-theme");
-    const escuroSistema = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const escuro = atual ? atual === "dark" : escuroSistema;
-    const novo = escuro ? "light" : "dark";
+    const novo = escuro() ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", novo);
-    localStorage.setItem("tema", novo);
-    atualizarBotao();
+    try { localStorage.setItem("tema", novo); } catch { /* sem storage */ }
+    rotulo();
   });
 }
 
-function renderizarTopo(d) {
-  if (d.exemplo === true) {
-    $("aviso-exemplo").hidden = false;
-    $("meta-exemplo").textContent = d.gerado_em ? `gerado em ${d.gerado_em}` : "";
-  }
+/* ---------- tooltip (hover em qualquer [data-tip]) ---------- */
+function iniciarTooltip() {
+  const tip = $("tip");
+  document.addEventListener("pointerover", (e) => {
+    const alvo = e.target.closest?.("[data-tip]");
+    if (!alvo) return;
+    tip.textContent = alvo.getAttribute("data-tip");
+    tip.hidden = false;
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (tip.hidden) return;
+    const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = x + "px"; tip.style.top = (e.clientY + 16) + "px";
+  });
+  document.addEventListener("pointerout", (e) => {
+    if (e.target.closest?.("[data-tip]") && !e.relatedTarget?.closest?.("[data-tip]")) tip.hidden = true;
+  });
+}
 
-  const tot = d.totais || {};
-  const cls = d.classificacao || {};
-  const p4 = d.p4_sozinho_ou_pessoa || {};
-  const p1 = d.p1_por_que_procuram || {};
-  const ra = (p1.canais || []).find(c => c.canal === "reclame_aqui");
-  const pctAuto = p4.fila_avaliada ? p4.automatico / p4.fila_avaliada : 0;
+/* ---------- componentes ---------- */
+// segs: [{rotulo, valor, cor}] → barra empilhada + legenda com valores (identidade nunca só pela cor)
+function pilha(segs, { alta = false, formato = intBR, total = null } = {}) {
+  const soma = total ?? segs.reduce((a, x) => a + x.valor, 0);
+  return h("div", { style: "display:grid;gap:8px" },
+    h("div", { class: "pilha" + (alta ? " alta" : ""), role: "img",
+               "aria-label": segs.map(x => `${x.rotulo}: ${formato(x.valor)}`).join("; ") },
+      ...segs.map(x => h("div", { style: `width:${(100 * x.valor / soma).toFixed(2)}%;background:var(${x.cor})`,
+                                  "data-tip": `${x.rotulo}: ${formato(x.valor)} (${pct(x.valor / soma, 1)})` }))),
+    h("div", { class: "legenda" }, ...segs.map(x =>
+      h("span", {}, h("i", { class: "qd", style: `background:var(${x.cor})` }), x.rotulo, " ", h("b", {}, formato(x.valor))))));
+}
 
-  const fator = tot.fator_expansao ?? 3;
-  const convEstimadas = tot.conversas_estimadas ?? (tot.conversas != null ? tot.conversas * fator : null);
-  const notaAmostra = `Amostra de 1 em cada ${intBR(fator)} clientes; números expandidos para a operação inteira (${intBR(tot.conversas)} conversas na amostra → ${intBR(convEstimadas)} estimadas).`;
-  $("nota-amostra").textContent = notaAmostra;
+function barraSimples(frac, cor) {
+  return h("div", { class: "trilho-b" }, h("div", { style: `width:${Math.max(0, Math.min(100, frac * 100)).toFixed(1)}%;background:var(${cor})` }));
+}
 
-  const trechoRA = ra
-    ? ` O Reclame Aqui representa apenas ${pct(ra.pct_conversas)} do volume, mas consome ${pct(ra.pct_custo)} de todo o custo (${brl(ra.custo)}).`
-    : "";
-  $("frase-tese").textContent =
-    `Em ${d.periodo?.dias || 90} dias, a operação soma cerca de ${intBR(convEstimadas)} conversas estimadas (${intBR(tot.marcas)} marcas) e um custo trimestral de ${brl(tot.custo_estimado)}.` +
-    trechoRA +
-    ` Com classificação por IA e decisão por regras determinísticas, ${pct(pctAuto)} da fila pode ser tratada automaticamente sem expor saúde ou dinheiro a alucinações.`;
+function comoLer(texto) {
+  return h("details", { class: "como-ler" }, h("summary", {}, "Como ler este gráfico"), h("p", {}, texto));
+}
+function deOnde(...partes) {
+  return h("p", { class: "de-onde" }, h("b", {}, "De onde vem: "), ...partes);
+}
+function cabAto(id, eyebrow, titulo, texto) {
+  return h("div", { class: "ato-cab" }, h("span", { class: "eyebrow" }, eyebrow), h("h2", {}, titulo), h("p", {}, texto));
+}
 
-  const kpis = [
-    {
-      rotulo: `Conversas estimadas (${d.periodo?.dias || 90} dias)`,
-      valor: intBR(convEstimadas),
-      cls: "",
-      detalhe: `Amostra de 1 em cada ${intBR(fator)} clientes (${intBR(tot.conversas)} na amostra · ${intBR(tot.marcas)} marcas); números expandidos para a operação inteira`,
-    },
-    {
-      rotulo: "Custo trimestral estimado",
-      valor: brl(tot.custo_estimado),
-      cls: "",
-      detalhe: ra ? `Escala da operação inteira (${intBR(convEstimadas)} conversas) · Reclame Aqui = ${pct(ra.pct_custo)} do custo` : "Custo operacional na escala da operação inteira",
-    },
-    {
-      rotulo: "Potencial de automação",
-      valor: pct(pctAuto),
-      cls: "destaque-auto",
-      detalhe: `${intBR(p4.automatico)} de ${intBR(p4.fila_avaliada)} na fila da amostra (${pct(p4.resolucao_completa_pct)} resolução direta sem pedir dados)`,
-    },
-    {
-      rotulo: "Acerto na classificação",
-      valor: `${pct(cls.acerto_agente, 1)} vs ${pct(cls.acerto_tag_manual, 1)}`,
-      cls: "destaque-acc",
-      detalhe: `Agente (${cls.modelo || "LLM"}) contra tag manual · Saúde detectada: ${cls.saude_detectada || "—"}`,
-    },
+function pessoaSVG(cls) {
+  return s("svg", { viewBox: "0 0 24 30", class: cls, "aria-hidden": "true" },
+    s("circle", { cx: 12, cy: 7, r: 5.5, fill: "currentColor" }),
+    s("path", { d: "M2 29c0-6.6 4.5-11 10-11s10 4.4 10 11z", fill: "currentColor" }));
+}
+
+/* =====================================================================
+   ATO 1 · O que recebemos (só fatos, nenhuma conclusão)
+   ===================================================================== */
+function atoDados(d) {
+  const t = d.totais, m = d.metodologia, p1 = d.p1_por_que_procuram;
+  const fator = t.fator_expansao;
+  const canais = p1.canais;
+  const ordemCanal = ["whatsapp", "email", "reclame_aqui"];
+  const canaisOrd = ordemCanal.map(c => canais.find(x => x.canal === c)).filter(Boolean);
+  const maxVol = Math.max(...canaisOrd.map(c => c.pct_conversas));
+  const pedidosPorContato = m.pedidos_faturados_periodo / t.conversas_estimadas;
+  const st = m.conversas_por_status;
+  const autor = m.mensagens_por_autor;
+
+  const cards = [
+    h("div", { class: "info" },
+      h("span", { class: "rot" }, "Período"),
+      h("span", { class: "grande" }, d.periodo.dias, h("small", {}, " dias")),
+      h("div", { class: "linha-tempo" }, h("div", { class: "trilho" }),
+        h("div", { class: "pontas" }, h("span", {}, dataBR(d.periodo.inicio)), h("span", {}, dataBR(d.periodo.fim)))),
+      h("p", { class: "leg" }, "Um trimestre de conversas, de ponta a ponta.")),
+
+    h("div", { class: "info" },
+      h("span", { class: "rot" }, "A amostra"),
+      h("span", { class: "grande" }, intBR(t.conversas), h("small", {}, " conversas")),
+      h("div", { class: "pessoas", role: "img", "aria-label": `1 em cada ${fator} clientes` },
+        pessoaSVG("sel"), ...Array.from({ length: fator - 1 }, () => pessoaSVG("fora"))),
+      h("p", { class: "leg" }, h("b", {}, `1 em cada ${fator} clientes`),
+        ` que procuraram o atendimento, com todas as conversas deles. A operação real teve `,
+        h("b", {}, `~${intBR(t.conversas_estimadas)} conversas`), ".")),
+
+    h("div", { class: "info" },
+      h("span", { class: "rot" }, "Marcas"),
+      h("span", { class: "grande" }, t.marcas),
+      h("div", { class: "chips" }, h("span", { class: "chip acc" }, "Gocase"),
+        h("span", { class: "chip" }, `GoBeauté · ${t.marcas - 1} marcas`)),
+      h("p", { class: "leg" }, "Capinhas e acessórios personalizados (Gocase) e beleza (GoBeauté), no mesmo atendimento.")),
+
+    h("div", { class: "info largo" },
+      h("span", { class: "rot" }, "Quantas vezes o cliente precisa falar com a gente"),
+      h("span", { class: "grande" }, `1 a cada ${Math.round(pedidosPorContato)}`, h("small", {}, " pedidos")),
+      h("div", { class: "grade-pontos", role: "img", "aria-label": `1 conversa a cada ${Math.round(pedidosPorContato)} pedidos` },
+        ...Array.from({ length: Math.round(pedidosPorContato) }, (_, i) => h("i", { class: i === 0 ? "sel" : "" }))),
+      h("p", { class: "leg" }, h("b", {}, `${milhar(m.pedidos_faturados_periodo)} pedidos`), " faturados no período contra ",
+        h("b", {}, `~${intBR(t.conversas_estimadas)} conversas`), " de atendimento.")),
+
+    h("div", { class: "info largo" },
+      h("span", { class: "rot" }, "Mensagens trocadas"),
+      h("span", { class: "grande" }, intBR(m.mensagens)),
+      pilha([
+        { rotulo: "Cliente", valor: autor.cliente || 0, cor: "--c1" },
+        { rotulo: "Atendente", valor: autor.agente || 0, cor: "--c3" },
+        { rotulo: "Bot", valor: autor.bot || 0, cor: "--c2" },
+      ]),
+      h("p", { class: "leg" }, "Quem escreveu cada mensagem nas conversas da amostra.")),
+
+    h("div", { class: "info largo", id: "custos" },
+      h("span", { class: "rot" }, "Três canais, três preços por conversa"),
+      h("div", { class: "canais-lista" }, ...canaisOrd.map(c =>
+        h("div", { class: "canal-linha", "data-tip": `${c.rotulo}: ${intBR(c.conversas)} conversas na amostra (${pct(c.pct_conversas, 1)})` },
+          h("span", { class: "nome" }, c.rotulo),
+          h("div", { style: "display:grid;gap:2px" }, barraSimples(c.pct_conversas / maxVol, "--c3"),
+            h("span", { class: "vol" }, `${pct(c.pct_conversas)} das conversas`)),
+          h("span", { class: "preco" }, brl(c.custo_unitario, true))))),
+      h("p", { class: "leg" }, "Custo médio de cada conversa, informado pela empresa. O do Reclame Aqui inclui tempo de analista e impacto na reputação.")),
+
+    h("div", { class: "info largo" },
+      h("span", { class: "rot" }, "Situação das conversas no fim do período"),
+      h("span", { class: "grande" }, intBR((st.pendente || 0) + (st.reaberto || 0)), h("small", {}, " ainda em aberto")),
+      pilha([
+        { rotulo: "Resolvidas", valor: st.resolvido || 0, cor: "--c1" },
+        { rotulo: "Pendentes", valor: st.pendente || 0, cor: "--c3" },
+        { rotulo: "Reabertas", valor: st.reaberto || 0, cor: "--c2" },
+        { rotulo: "Cliente não escreveu", valor: st.sem_resposta_cliente || 0, cor: "--c0" },
+      ]),
+      h("p", { class: "leg" }, "Pendentes e reabertas formam a fila que o agente atende hoje.")),
+
+    h("div", { class: "info largo" },
+      h("span", { class: "rot" }, "Quanto custou o trimestre"),
+      h("span", { class: "grande" }, brl(t.custo_estimado)),
+      h("div", { class: "conta" },
+        ...canaisOrd.map(c => h("div", { class: "lin" },
+          h("span", {}, `${c.rotulo}: ${intBR(c.conversas)} conv. × ${brl(c.custo_unitario, true)} × ${fator}`),
+          h("span", {}, brl(c.custo)))),
+        h("div", { class: "tot" }, h("span", {}, "Total no trimestre"), h("span", {}, brl(t.custo_estimado)))),
+      h("p", { class: "leg" }, `Conversas da amostra × preço do canal × ${fator} (para chegar à operação inteira).`)),
+
+    h("div", { class: "info largo" },
+      h("span", { class: "rot" }, "Como o atendimento classificava as conversas"),
+      h("span", { class: "grande" }, m.tags_manuais_existentes, h("small", {}, " etiquetas manuais")),
+      h("div", { class: "chips" }, ...m.tags_manuais_distribuicao.map(x => h("span", { class: "chip" }, x.tag))),
+      h("p", { class: "leg" }, "Ao encerrar, o atendente escolhia ", h("b", {}, "uma"), " etiqueta para a conversa inteira. ",
+        `${intBR(m.conversas_com_tag)} das ${intBR(m.conversas)} conversas têm etiqueta.`)),
   ];
 
-  $("kpis").replaceChildren(...kpis.map(k =>
-    h("div", { class: "kpi" },
-      h("span", { class: "rotulo" }, k.rotulo),
-      h("span", { class: "valor " + k.cls }, k.valor),
-      h("span", { class: "detalhe" }, k.detalhe)
-    )
-  ));
+  return h("section", { class: "ato", id: "dados" },
+    cabAto("dados-cab", "Parte 1 · O que recebemos",
+      "Antes de qualquer conclusão: o material do case",
+      "A empresa nos entregou uma amostra das conversas, os pedidos desses clientes e os parâmetros do negócio. Estes são os fatos, sem interpretação."),
+    h("div", { class: "info-grade" }, ...cards));
 }
 
-function criarListaComparativa(itens, mostrarGravidade = false) {
-  const maxPct = Math.max(
-    ...itens.flatMap(i => [Number(i.pct_conversas) || 0, Number(i.pct_custo) || 0]),
-    0.01
-  );
-
-  return h("div", { class: "lista-comparativa" },
-    ...itens.map(item => {
-      const pVol = Number(item.pct_conversas) || 0;
-      const pCus = Number(item.pct_custo) || 0;
-      const largVol = Math.min(100, (pVol / maxPct) * 100);
-      const largCus = Math.min(100, (pCus / maxPct) * 100);
-
-      return h("div", { class: "item-comp" },
-        h("div", { class: "cab" },
-          h("span", { class: "nome" },
-            item.rotulo || item.motivo || item.categoria,
-            mostrarGravidade && item.gravidade != null
-              ? h("span", { class: "pill " + (item.gravidade >= 80 ? "hum" : "sp") }, `gravidade ${item.gravidade}`)
-              : null
-          ),
-          h("div", { class: "metricas" },
-            h("span", {}, `${intBR(item.conversas)} conv.`),
-            h("span", {}, "·"),
-            h("span", {}, brl(item.custo))
-          )
-        ),
-        h("div", { class: "dupla-barra" },
-          h("div", { class: "linha-barra" },
-            h("span", { class: "rot" }, "Conversas"),
-            h("div", { class: "trilho-b" }, h("div", { class: "preenchimento vol", style: `width:${largVol.toFixed(1)}%` })),
-            h("span", { class: "pct" }, pct(pVol, 1))
-          ),
-          h("div", { class: "linha-barra" },
-            h("span", { class: "rot" }, "Custo"),
-            h("div", { class: "trilho-b" }, h("div", { class: "preenchimento cus", style: `width:${largCus.toFixed(1)}%` })),
-            h("span", { class: "pct" }, pct(pCus, 1))
-          )
-        )
-      );
-    })
-  );
+/* =====================================================================
+   ATO 2 · O que estava dando errado (cada problema provado com números)
+   ===================================================================== */
+function cartaoProblema(n, titulo, texto, prova, feito, ancora) {
+  return h("article", { class: "prob" },
+    h("span", { class: "n" }, `Problema ${n}`),
+    h("h3", {}, titulo),
+    h("p", { class: "txt" }, texto),
+    h("div", { class: "prova" }, h("span", { class: "rot" }, "A prova"), ...prova),
+    h("div", { class: "feito" }, h("b", {}, "O que fizemos"), h("span", {}, feito)),
+    h("a", { class: "como-medimos", href: METODOLOGIA(ancora) }, "Como medimos →"));
 }
 
-function secaoP1(p1) {
-  const categorias = p1?.categorias || [];
-  const motivos = p1?.motivos || [];
-  const canais = p1?.canais || [];
+function atoProblemas(d) {
+  const c = d.classificacao, m = d.metodologia, sau = d.saude, h4 = d.p4_sozinho_ou_pessoa.historico;
+  const p2 = d.p2_contatos_evitaveis.itens;
+  const rec = p2.find(x => x.id === "recontato");
+  const genericas = ["Outros", "Dúvida"];
+  const tags = m.tags_manuais_distribuicao;
+  const maxTag = Math.max(...tags.map(x => x.conversas));
+  const genTotal = tags.filter(x => genericas.includes(x.tag)).reduce((a, x) => a + x.conversas, 0);
 
-  const containerGrafico = h("div", {});
-  const btnCat = h("button", { type: "button", class: "seg-btn ativo" }, `Por categoria (${categorias.length})`);
-  const btnMot = h("button", { type: "button", class: "seg-btn" }, `Por motivo (${motivos.length})`);
+  // 1 · classificação
+  const p1 = cartaoProblema(1, "A etiqueta manual não diz por que o cliente procura",
+    "A liderança decidia olhando as etiquetas. Mas uma etiqueta por conversa, escolhida à mão, erra o motivo principal quase metade das vezes e apaga os outros assuntos.",
+    [
+      h("div", { class: "duas" },
+        h("div", { class: "comp-barra", "data-tip": `Etiqueta manual acertou o motivo principal em ${pct(c.acerto_tag_manual, 1)} das conversas do gabarito` },
+          h("span", {}, "Etiqueta manual"), barraSimples(c.acerto_tag_manual, "--c0"), h("span", { class: "v" }, pct(c.acerto_tag_manual, 1))),
+        h("div", { class: "comp-barra", "data-tip": `O agente acertou ${pct(c.acerto_agente, 1)}` },
+          h("span", {}, "Agente de IA"), barraSimples(c.acerto_agente, "--c1"), h("span", { class: "v" }, pct(c.acerto_agente, 1)))),
+      h("p", { class: "leg muted", style: "font-size:.82rem" }, `Acerto do motivo principal em ${c.amostra_gabarito} conversas conferidas uma a uma.`),
+      h("div", { class: "destaque-num" }, h("span", { class: "g" }, pct(m.pct_multimotivo)),
+        h("span", { class: "leg" }, `das conversas (${intBR(m.conversas_multimotivo)}) trazem mais de um assunto, mas a etiqueta guarda só um.`)),
+      h("div", { class: "mini-barras", role: "img", "aria-label": "Conversas por etiqueta manual" },
+        ...tags.map(x => h("div", { class: "lin" + (genericas.includes(x.tag) ? " gen" : ""), "data-tip": `${x.tag}: ${intBR(x.conversas)} conversas` },
+          h("span", { class: "nm" }, x.tag), barraSimples(x.conversas / maxTag, genericas.includes(x.tag) ? "--human" : "--c4"),
+          h("span", { class: "v" }, intBR(x.conversas))))),
+      h("p", { class: "leg muted", style: "font-size:.82rem" }, `${intBR(genTotal)} conversas (${pct(genTotal / m.conversas_com_tag)}) caíram em etiquetas genéricas (${genericas.join(" e ")}), que não dizem nada sobre o problema.`),
+    ],
+    `O agente lê a conversa inteira e aponta todos os motivos (${m.motivos_taxonomia} motivos em ${m.categorias_taxonomia} categorias), cada um com a frase do cliente que o comprova.`,
+    "classificacao");
 
-  const mostrarCat = () => {
-    btnCat.classList.add("ativo");
-    btnMot.classList.remove("ativo");
-    containerGrafico.replaceChildren(criarListaComparativa(categorias, false));
+  // 2 · saúde
+  const reg = sau.reacao_horas_ate_humano_mediana, prazo = sau.prazo_politica_horas;
+  const escala = Math.max(prazo * 1.25, reg * 1.2);
+  const p2c = cartaoProblema(2, "Casos de saúde ficavam invisíveis",
+    `Reação a cosmético exige registro de cosmetovigilância em até ${prazo} horas. Mas não existe etiqueta de saúde: ninguém conseguia contar esses casos, nem conferir o prazo.`,
+    [
+      h("div", { class: "par-num" },
+        h("div", {}, h("span", { class: "g" }, intBR(sau.conversas)),
+          h("span", { class: "leg" }, `conversas de saúde: ${intBR(sau.reacao_adversa)} reações adversas e ${intBR(sau.duvida_saude)} dúvidas`)),
+        h("div", {}, h("span", { class: "g zero" }, "0"),
+          h("span", { class: "leg" }, "etiquetas de Saúde para registrá-las"))),
+      h("p", { class: "leg", style: "font-size:.86rem" }, "Onde elas foram parar:"),
+      h("div", { class: "chips" }, ...sau.tags_manuais.map(x => h("span", { class: "chip" }, x.tag, " ", h("b", {}, intBR(x.conversas))))),
+      h("p", { style: "font-size:.88rem" }, h("b", {}, `${intBR(sau.primeira_resposta.bot)} de ${intBR(sau.conversas)}`),
+        " foram respondidas primeiro pelo bot, antes de qualquer pessoa."),
+      h("div", { class: "regua", role: "img", "aria-label": `Mediana de ${reg} horas até um humano responder; prazo da política ${prazo} horas` },
+        h("div", { class: "eixo" }, h("div", { class: "base" }),
+          h("div", { class: "marca", style: `left:${(100 * reg / escala).toFixed(1)}%;background:var(--c1)`, "data-tip": `Mediana: ${String(reg).replace(".", ",")} h até um humano responder` }),
+          h("div", { class: "marca", style: `left:${(100 * prazo / escala).toFixed(1)}%;background:var(--human)`, "data-tip": `Prazo da política: ${prazo} h` })),
+        h("div", { class: "rotulos" },
+          h("span", { style: `left:${(100 * reg / escala).toFixed(1)}%` }, `mediana ${String(reg).replace(".", ",")} h`),
+          h("span", { style: `left:${(100 * prazo / escala).toFixed(1)}%` }, `prazo ${prazo} h`))),
+      h("p", { class: "leg muted", style: "font-size:.82rem" }, `Reações adversas: tempo até um humano responder. ${intBR(sau.reacao_acima_24h)} ${sau.reacao_acima_24h === 1 ? "caso passou" : "casos passaram"} do prazo. O tempo foi bom; o problema é não haver como medir isso no dia a dia.`),
+    ],
+    "Criamos a categoria Saúde. Todo caso vai para a responsável técnica, fura a fila e chega com o protocolo de cosmetovigilância pronto. Nenhum é resolvido pelo agente sozinho.",
+    "saude");
+
+  // 3 · recontato
+  const p3c = cartaoProblema(3, "O mesmo cliente volta a perguntar",
+    "Quando a primeira resposta não resolve, ou responde só um dos assuntos, o cliente escreve de novo. Cada volta é uma conversa nova, paga de novo.",
+    [
+      h("div", { class: "destaque-num" }, h("span", { class: "g" }, intBR(rec.conversas)),
+        h("span", { class: "leg" }, `conversas (${pct(rec.conversas / d.totais.conversas)}) são o cliente voltando ao mesmo assunto`)),
+      h("div", { class: "destaque-num" }, h("span", { class: "g" }, brl(rec.custo)),
+        h("span", { class: "leg" }, "no trimestre, só com essas voltas")),
+    ],
+    "O agente responde todos os assuntos da conversa num só texto, um parágrafo por assunto, e quem voltou a perguntar sobe na fila.",
+    "recontato");
+
+  // 4 · funil
+  const rast = p2.find(x => x.id === "rastreio"), end = p2.find(x => x.id === "endereco");
+  const etapas = [
+    { rot: "Conversas no trimestre (amostra)", q: h4.conversas, cor: "--c0" },
+    { rot: "Cliente nem chegou a escrever (abandono no bot)", q: h4.sem_mensagem, cor: "--c2" },
+    { rot: "Têm mensagem do cliente", q: h4.com_mensagem, cor: "--c1" },
+    { rot: "Resolvidas por regra, sem pessoa", q: h4.automatico, cor: "--auto" },
+    { rot: "Precisam de uma pessoa", q: h4.humano, cor: "--human" },
+  ];
+  const p4c = cartaoProblema(4, "Muita conversa não precisava de uma pessoa, ou nem precisava existir",
+    "Hoje o bot só faz a triagem: quem resolve é sempre um atendente. Rodamos o agente em todas as conversas do trimestre para ver quantas ele resolveria sozinho, seguindo as políticas da empresa.",
+    [
+      h("div", { class: "funil", role: "img", "aria-label": etapas.map(e => `${e.rot}: ${e.q}`).join("; ") },
+        ...etapas.map(e => h("div", { class: "et", "data-tip": `${e.rot}: ${intBR(e.q)}` },
+          h("span", {}, e.rot), h("span", { class: "q" }, intBR(e.q)),
+          h("div", { class: "b", style: `width:${(100 * e.q / h4.conversas).toFixed(1)}%;background:var(${e.cor})` })))),
+      h("p", { style: "font-size:.88rem" }, h("b", {}, pct(h4.pct_automatico)), " das conversas com mensagem teriam sido resolvidas sem pessoa. E parte delas nem precisava existir: ",
+        h("b", {}, `${intBR(rast.conversas)} dúvidas de rastreio`), " e ", h("b", {}, `${intBR(end.conversas)} trocas de endereço`),
+        " somem com aviso proativo e autoatendimento, sem IA."),
+    ],
+    "O agente resolve por regra o que a política permite e encaminha o resto com um dossiê. Para o que nem precisava existir, recomendamos as mudanças de processo da Pergunta 2.",
+    "decisao");
+
+  return h("section", { class: "ato", id: "problemas" },
+    cabAto("prob-cab", "Parte 2 · O que estava dando errado",
+      "Quatro problemas do processo atual, cada um com a prova",
+      "Nenhuma afirmação aqui é opinião: cada problema vem com o número que o comprova. Como cada número foi medido está explicado na Metodologia."),
+    h("div", { class: "prob-grade" }, p1, p2c, p3c, p4c));
+}
+
+/* =====================================================================
+   ATO 3 · As respostas
+   ===================================================================== */
+function cabResposta(n, pergunta, resposta) {
+  return [h("div", {}, h("span", { class: "n" }, `Pergunta ${n}`), h("h3", { class: "perg" }, pergunta)),
+          h("p", { class: "resposta" }, ...resposta)];
+}
+
+function listaComparativa(itens, limite) {
+  const maxPct = Math.max(...itens.flatMap(i => [i.pct_conversas, i.pct_custo]), 0.01);
+  const linha = (rot, v, cor) => h("div", { class: "linha-barra" }, h("span", { class: "rot" }, rot),
+    barraSimples(v / maxPct, cor), h("span", { class: "pct" }, pct(v, 1)));
+  const visiveis = limite ? itens.slice(0, limite) : itens;
+  return h("div", { class: "lista-comparativa" }, ...visiveis.map(i =>
+    h("div", { class: "item-comp", "data-tip": `${i.rotulo}: ${intBR(i.conversas)} conversas (${pct(i.pct_conversas, 1)}) · ${brl(i.custo)} (${pct(i.pct_custo, 1)} do custo)` },
+      h("div", { class: "cab" }, h("span", { class: "nome" }, i.rotulo),
+        h("span", { class: "metricas" }, `${intBR(i.conversas)} conversas · ${brl(i.custo)}`)),
+      linha("Conversas", i.pct_conversas, "--c3"),
+      linha("Custo", i.pct_custo, "--c1"))));
+}
+
+function secaoP1(d) {
+  const p1 = d.p1_por_que_procuram;
+  const porVol = [...p1.categorias].sort((a, b) => b.conversas - a.conversas)[0];
+  const motCaro = p1.motivos[0];
+  const ra = p1.canais.find(c => c.canal === "reclame_aqui");
+  const vezes = ra ? Math.round(ra.custo_unitario / Math.min(...p1.canais.map(c => c.custo_unitario))) : null;
+
+  const area = h("div", {});
+  let modo = "categorias", tudo = false;
+  const btnCat = h("button", { type: "button", class: "seg-btn ativo" }, `Por categoria (${p1.categorias.length})`);
+  const btnMot = h("button", { type: "button", class: "seg-btn" }, `Por motivo (${p1.motivos.length})`);
+  const btnMais = h("button", { type: "button", class: "mais" });
+  const desenhar = () => {
+    btnCat.classList.toggle("ativo", modo === "categorias"); btnMot.classList.toggle("ativo", modo === "motivos");
+    const itens = p1[modo];
+    const limite = modo === "motivos" && !tudo ? 10 : null;
+    btnMais.hidden = modo !== "motivos";
+    btnMais.textContent = tudo ? "Mostrar só os 10 maiores" : `Mostrar todos os ${itens.length} motivos`;
+    area.replaceChildren(listaComparativa(itens, limite));
   };
-  const mostrarMot = () => {
-    btnMot.classList.add("ativo");
-    btnCat.classList.remove("ativo");
-    containerGrafico.replaceChildren(criarListaComparativa(motivos, true));
+  btnCat.addEventListener("click", () => { modo = "categorias"; desenhar(); });
+  btnMot.addEventListener("click", () => { modo = "motivos"; desenhar(); });
+  btnMais.addEventListener("click", () => { tudo = !tudo; desenhar(); });
+  desenhar();
+
+  return h("article", { class: "resp", id: "p1" },
+    ...cabResposta(1, "Por que os clientes nos procuram, e qual o peso real de cada motivo?", [
+      "Principalmente por ", h("b", {}, porVol.rotulo.toLowerCase()), ` (${pct(porVol.pct_conversas)} das conversas). Mas volume não é peso: `,
+      h("b", {}, "o Reclame Aqui"), ` tem só ${pct(ra.pct_conversas)} das conversas e ${pct(ra.pct_custo)} do custo.`]),
+    h("div", { class: "insights" },
+      h("div", { class: "insight" }, h("span", { class: "rot" }, "Maior volume"), h("span", { class: "val" }, porVol.rotulo),
+        h("span", { class: "det" }, `${intBR(porVol.conversas)} conversas · ${pct(porVol.pct_conversas)} do total`)),
+      h("div", { class: "insight" }, h("span", { class: "rot" }, "Motivo mais caro"), h("span", { class: "val" }, motCaro.rotulo),
+        h("span", { class: "det" }, `${brl(motCaro.custo)} no trimestre · ${pct(motCaro.pct_custo)} do custo`)),
+      h("div", { class: "insight", style: "border-color:var(--human)" }, h("span", { class: "rot" }, "Canal desproporcional"), h("span", { class: "val" }, "Reclame Aqui"),
+        h("span", { class: "det" }, `${pct(ra.pct_conversas)} das conversas, ${pct(ra.pct_custo)} do custo: cada caso custa ${vezes}× um WhatsApp e a resposta é pública.`))),
+    h("div", { class: "controles" },
+      h("div", { class: "seg-group", role: "group", "aria-label": "Agrupar por" }, btnCat, btnMot),
+      h("div", { class: "legenda" },
+        h("span", {}, h("i", { class: "qd", style: "background:var(--c3)" }), "fatia das conversas"),
+        h("span", {}, h("i", { class: "qd", style: "background:var(--c1)" }), "fatia do custo"))),
+    area, btnMais,
+    comoLer("Cada assunto tem duas barras. A azul é a fatia das conversas; a roxa, a fatia do dinheiro. Quando a roxa é maior que a azul, o assunto custa mais do que o volume sugere, quase sempre porque aparece mais no Reclame Aqui."),
+    h("div", { class: "tabela-wrap" }, h("table", {},
+      h("thead", {}, h("tr", {}, h("th", {}, "Canal"), h("th", { class: "dir" }, "Conversas"), h("th", { class: "dir" }, "% conversas"),
+        h("th", { class: "dir" }, "Preço por conversa"), h("th", { class: "dir" }, "Custo"), h("th", { class: "dir" }, "% custo"))),
+      h("tbody", {}, ...p1.canais.map(c => h("tr", {},
+        h("td", {}, h("b", {}, c.rotulo)), h("td", { class: "dir" }, intBR(c.conversas)), h("td", { class: "dir" }, pct(c.pct_conversas, 1)),
+        h("td", { class: "dir" }, brl(c.custo_unitario, true)), h("td", { class: "dir" }, h("b", {}, brl(c.custo))), h("td", { class: "dir" }, h("b", {}, pct(c.pct_custo, 1)))))))),
+    deOnde("o motivo de cada conversa vem da classificação do agente; o custo é o preço do canal × ",
+      `${d.totais.fator_expansao} (amostra → operação). Uma conversa com vários assuntos conta inteira para o motivo principal (o mais grave), para os custos somarem o total.`));
+}
+
+const POR_QUE_EXISTE = {
+  recontato: "A primeira resposta não resolveu, ou respondeu só um dos assuntos.",
+  rastreio: "O cliente não sabe onde está o pedido e não recebe aviso quando o status muda.",
+  abandono_bot: "O cliente abre a conversa, o bot responde e ele desiste antes de explicar o problema.",
+  endereco: "Não existe um jeito de o próprio cliente corrigir o endereço antes da separação.",
+};
+
+function secaoP2(d) {
+  const p2 = d.p2_contatos_evitaveis, total = d.totais.custo_estimado;
+  const resto = total - p2.total_custo;
+  return h("article", { class: "resp", id: "p2" },
+    ...cabResposta(2, "Quais contatos poderiam simplesmente não existir?", [
+      "Até ", h("b", {}, brl(p2.total_custo)), ` por trimestre (${pct(p2.total_custo / total)} do custo) vêm de conversas que um processo melhor evitaria, sem precisar de IA.`]),
+    pilha([
+      { rotulo: "Evitável", valor: p2.total_custo, cor: "--human" },
+      { rotulo: "Restante", valor: resto, cor: "--c0" },
+    ], { alta: true, formato: (v) => brl(v) }),
+    h("div", { class: "grade-2" }, ...p2.itens.map(x => h("div", { class: "cartao" },
+      h("div", { class: "topo" }, h("span", { class: "tit" }, x.rotulo), h("span", { class: "val" }, `${brl(x.custo)} · ${intBR(x.conversas)} conv.`)),
+      POR_QUE_EXISTE[x.id] ? h("p", { class: "por" }, h("b", {}, "Por que existe: "), POR_QUE_EXISTE[x.id]) : null,
+      h("p", { class: "evitar" }, h("b", {}, "Como evitar: "), x.como_evitar)))),
+    comoLer("A barra mostra o custo do trimestre inteiro; a parte laranja é o que poderia ser evitado. Os cartões detalham de onde vem essa parte."),
+    deOnde("os cartões podem se sobrepor (ex.: um recontato sobre rastreio aparece nos dois). Por isso o total ",
+      h("b", {}, "não"), " é a soma dos cartões: cada conversa entra uma vez só."));
+}
+
+function dispersao(todos) {
+  // "sem conteúdo" não é um motivo (o cliente não escreveu): fica fora do gráfico
+  const motivos = todos.filter(x => x.motivo !== "sem_conteudo");
+  const L = 640, A = 360, m = { e: 46, d: 16, t: 30, b: 40 };
+  const maxC = Math.max(...motivos.map(x => x.custo)) * 1.08;
+  const X = (v) => m.e + (v / maxC) * (L - m.e - m.d);
+  const Y = (g) => A - m.b - (g / 100) * (A - m.t - m.b);
+  const corteC = maxC * 0.25, corteG = 50;
+  const svg = s("svg", { viewBox: `0 0 ${L} ${A}`, role: "img",
+    "aria-label": "Cada ponto é um motivo: quanto custa no trimestre (horizontal) e quão grave é para o cliente (vertical)" });
+  [0, 25, 50, 75, 100].forEach(g => svg.append(s("line", { class: "grade", x1: m.e, x2: L - m.d, y1: Y(g), y2: Y(g) }),
+    s("text", { class: "eixo-txt", x: m.e - 8, y: Y(g) + 4, "text-anchor": "end" }, g)));
+  [0, 0.25, 0.5, 0.75, 1].forEach(f => svg.append(s("text", { class: "eixo-txt", x: X(maxC * f / 1.08), y: A - m.b + 18, "text-anchor": "middle" },
+    "R$ " + Math.round(maxC * f / 1.08 / 1000) + " mil")));
+  svg.append(s("line", { class: "div", x1: X(corteC), x2: X(corteC), y1: m.t, y2: A - m.b }),
+    s("line", { class: "div", x1: m.e, x2: L - m.d, y1: Y(corteG), y2: Y(corteG) }),
+    s("text", { class: "quad-txt", x: L - m.d - 4, y: m.t + 12, "text-anchor": "end" }, "Grave e caro: atacar já ↗"),
+    s("text", { class: "quad-txt", x: L - m.d - 4, y: A - m.b - 8, "text-anchor": "end" }, "Caro, pouco grave: prevenir ↘"),
+    s("text", { class: "quad-txt", x: X(corteC) + 6, y: m.t - 14 }, "↖ Grave, pouco custo: regra rígida e pessoa"),
+    s("text", { class: "eixo-txt", x: (L + m.e) / 2, y: A - 4, "text-anchor": "middle" }, "Custo no trimestre →"),
+    s("text", { class: "eixo-txt", x: 12, y: m.t + 4, transform: `rotate(-90 12 ${m.t + 4})`, "text-anchor": "end" }, "Gravidade →"));
+  // rótulos seletivos: os 4 mais caros + o mais grave de cada faixa crítica (sem rotular todos os pontos)
+  const graves = ["reacao_adversa", "cobranca_duplicada"];
+  const rotular = new Set([...motivos.slice(0, 4).map(x => x.motivo), ...graves]);
+  motivos.forEach(x => {
+    const g = s("g", { "data-tip": `${x.rotulo}: ${brl(x.custo)} no trimestre · gravidade ${x.gravidade} · ${intBR(x.conversas)} conversas` });
+    const cor = x.categoria === "saude" ? "var(--human)" : "var(--c1)";
+    g.append(s("circle", { cx: X(x.custo), cy: Y(x.gravidade), r: 14, fill: "transparent", stroke: "none" }),
+      s("circle", { cx: X(x.custo), cy: Y(x.gravidade), r: 6, fill: cor }));
+    svg.append(g);
+  });
+  // rótulos seletivos, com deslocamento para evitar sobreposição em pontos de mesma altura
+  // caixa estimada de cada rótulo (6,3 px por caractere a 11px); desce/sobe até não colidir
+  const caixas = [];
+  const colide = (a) => caixas.some(b => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1);
+  motivos.filter(x => rotular.has(x.motivo)).sort((a, b) => b.gravidade - a.gravidade).forEach(x => {
+    const px = X(x.custo), larg = x.rotulo.length * 6.3;
+    const aDireita = px + 9 + larg < L - m.d;
+    const x0 = aDireita ? px + 9 : px - 9 - larg;
+    const base = Y(x.gravidade) + 4;
+    const desvios = [0, 13, -13, 26, -26, 39, -39];
+    let y = base;
+    const caixa = () => ({ x0, x1: x0 + larg, y0: y - 10, y1: y + 3 });
+    for (const dv of desvios) { y = base + dv; if (!colide(caixa())) break; }
+    caixas.push(caixa());
+    svg.append(s("text", { class: "rot-ponto", x: aDireita ? px + 9 : px - 9, y, "text-anchor": aDireita ? "start" : "end" }, x.rotulo));
+  });
+  return h("div", { class: "dispersao" }, svg);
+}
+
+function secaoP3(d) {
+  const p3 = d.p3_atacar_primeiro;
+  const primeiro = p3.itens[0];
+  return h("article", { class: "resp", id: "p3" },
+    ...cabResposta(3, "O que o time deveria atacar primeiro, e com que critério?", [
+      "Primeiro ", h("b", {}, primeiro.foco), `: ${primeiro.porque.charAt(0).toLowerCase() + primeiro.porque.slice(1)} O critério cruza `,
+      h("b", {}, "quanto custa"), " com ", h("b", {}, "quão grave é para o cliente"), "."]),
+    h("div", { class: "dispersao-wrap" },
+      h("div", { style: "display:grid;gap:10px;min-width:0" }, dispersao(d.p1_por_que_procuram.motivos),
+        h("div", { class: "legenda" },
+          h("span", {}, h("i", { class: "qd", style: "background:var(--c1)" }), "motivo"),
+          h("span", {}, h("i", { class: "qd", style: "background:var(--human)" }), "motivo de saúde"))),
+      h("div", { class: "lista-rank" }, ...p3.itens.map(x => h("div", { class: "item-rank" },
+        h("span", { class: "bola-rank" }, x.rank),
+        h("div", { style: "display:grid;gap:3px;min-width:0" }, h("span", { class: "foco" }, x.foco),
+          h("span", { class: "porque" }, x.porque),
+          h("span", { class: "nums" }, `${brl(x.custo)} · ${intBR(x.conversas)} conversas`)))))),
+    comoLer("Cada ponto é um motivo. Quanto mais à direita, mais dinheiro ele consome; quanto mais alto, mais grave para o cliente (saúde e cobrança no topo). O canto de cima à direita é o que atacar primeiro. Pontos altos e à esquerda custam pouco, mas não podem errar: ficam com regras rígidas e atendimento humano. Passe o mouse num ponto para ver os números."),
+    deOnde(h("b", {}, "Critério: "), p3.criterio, " A gravidade de cada motivo (0 a 100) é a mesma régua que o agente usa para escolher o motivo principal e priorizar a fila."));
+}
+
+function secaoP4(d) {
+  const p4 = d.p4_sozinho_ou_pessoa, hist = p4.historico;
+  const visoes = {
+    hoje: { nome: `Fila de hoje (${intBR(p4.fila_avaliada)})`, total: p4.fila_avaliada, auto: p4.automatico, hum: p4.humano,
+            acoes: p4.por_acao, filas: p4.por_fila_humana,
+            desc: "Conversas pendentes e reabertas no fim do período: o que o agente faria agora." },
+    trimestre: { nome: `Trimestre inteiro (${intBR(hist.com_mensagem)})`, total: hist.com_mensagem, auto: hist.automatico, hum: hist.humano,
+                 acoes: hist.por_acao, filas: hist.por_fila_humana,
+                 desc: `Todas as conversas com mensagem do cliente: o que teria acontecido se o agente estivesse no ar desde o início (${intBR(hist.sem_mensagem)} conversas sem mensagem ficam de fora).` },
   };
+  let atual = "trimestre";
+  const area = h("div", { style: "display:grid;gap:16px;min-width:0" });
+  const botoes = Object.entries(visoes).map(([k, v]) => {
+    const b = h("button", { type: "button", class: "seg-btn" }, v.nome);
+    b.addEventListener("click", () => { atual = k; desenhar(); });
+    return [k, b];
+  });
+  const lista = (itens, campo) => {
+    const mx = Math.max(...itens.map(x => x.conversas), 1);
+    return h("div", { class: "lista-s" }, ...itens.map(x => h("div", { class: "lin" },
+      h("div", { class: "topo" }, h("span", {}, x.rotulo), h("span", { class: "v" }, intBR(x.conversas))),
+      barraSimples(x.conversas / mx, campo))));
+  };
+  const desenhar = () => {
+    botoes.forEach(([k, b]) => b.classList.toggle("ativo", k === atual));
+    const v = visoes[atual];
+    const pedeInfo = (v.acoes.find(a => a.acao === "solicitar_informacoes") || { conversas: 0 }).conversas;
+    area.replaceChildren(
+      h("p", { class: "muted", style: "font-size:.88rem" }, v.desc),
+      pilha([
+        { rotulo: "Resolve sozinho", valor: v.auto - pedeInfo, cor: "--auto" },
+        { rotulo: "Sozinho, mas só pede uma informação", valor: pedeInfo, cor: "--c2" },
+        { rotulo: "Vai para uma pessoa, com dossiê", valor: v.hum, cor: "--human" },
+      ], { alta: true, total: v.total }),
+      h("div", { class: "colunas-3" },
+        h("div", { class: "cartao" }, h("span", { class: "tit" }, "O que o agente faz sozinho"), lista(v.acoes, "--auto")),
+        h("div", { class: "cartao" }, h("span", { class: "tit" }, "Para qual equipe vai o resto"), lista(v.filas, "--human")),
+        h("div", { class: "cartao" }, h("span", { class: "tit" }, "Políticas que liberariam mais automação"),
+          h("p", { class: "por" }, `Conversas da fila de hoje cujo único bloqueio é a falta de uma política escrita:`),
+          h("div", { class: "lista-s" }, ...p4.politicas_faltantes.map(x => h("div", { class: "lin" },
+            h("div", { class: "topo" }, h("span", {}, x.rotulo), h("span", { class: "v" }, intBR(x.conversas))),
+            h("span", { class: "sug" }, x.sugestao)))))));
+  };
+  desenhar();
 
-  btnCat.addEventListener("click", mostrarCat);
-  btnMot.addEventListener("click", mostrarMot);
-  mostrarCat();
-
-  const tabelaCanais = h("div", { class: "tabela-wrap" },
-    h("table", { class: "canais" },
-      h("thead", {},
-        h("tr", {},
-          h("th", {}, "Canal"),
-          h("th", { class: "dir" }, "Conversas"),
-          h("th", { class: "dir" }, "% Volume"),
-          h("th", { class: "dir" }, "Custo unitário"),
-          h("th", { class: "dir" }, "Custo total"),
-          h("th", { class: "dir" }, "% Custo")
-        )
-      ),
-      h("tbody", {},
-        ...canais.map(c =>
-          h("tr", { class: c.canal === "reclame_aqui" ? "destaque-ra" : "" },
-            h("td", {},
-              h("b", {}, c.rotulo || c.canal),
-              c.canal === "reclame_aqui" ? h("span", { class: "pill hum", style: "margin-left:8px" }, "maior peso no custo") : null
-            ),
-            h("td", { class: "dir" }, intBR(c.conversas)),
-            h("td", { class: "dir" }, pct(c.pct_conversas, 1)),
-            h("td", { class: "dir" }, brl(c.custo_unitario, true)),
-            h("td", { class: "dir" }, h("b", {}, brl(c.custo))),
-            h("td", { class: "dir" }, h("b", {}, pct(c.pct_custo, 1)))
-          )
-        )
-      )
-    )
-  );
-
-  return h("section", { class: "card" },
-    h("div", { class: "secao-topo" },
-      h("div", {},
-        h("span", { class: "num-pergunta" }, "Pergunta 1"),
-        h("h2", { class: "pergunta" }, "Por que os clientes nos procuram, e qual o peso real de cada motivo?")
-      )
-    ),
-    h("p", { class: "secao-sub" },
-      "O volume de conversas sozinho esconde o custo real: motivos e canais com atendimento mais complexo ou caro distorcem o orçamento. Compare a fatia das conversas com a fatia do custo."
-    ),
-    h("div", { class: "controles-p1" },
-      h("div", { class: "seg-group", role: "group", "aria-label": "Agrupamento do gráfico" }, btnCat, btnMot),
-      h("div", { class: "legenda-barras" },
-        h("span", {}, h("i", { class: "dot vol" }), "% das conversas"),
-        h("span", {}, h("i", { class: "dot cus" }), "% do custo total")
-      )
-    ),
-    containerGrafico,
-    h("h3", { style: "margin-top:6px" }, "Peso por canal de atendimento (o contraste volume × custo)"),
-    tabelaCanais
-  );
+  return h("article", { class: "resp", id: "p4" },
+    ...cabResposta(4, "Que ações o sistema pode tomar sozinho, e quais precisam de uma pessoa?", [
+      "No trimestre, o agente teria resolvido ", h("b", {}, `${pct(hist.pct_automatico)} das conversas`), " sozinho, seguindo as políticas da empresa. ",
+      `Na fila de hoje, ${pct(p4.automatico / p4.fila_avaliada)}. O resto vai para a equipe certa com um dossiê pronto.`]),
+    h("div", { class: "controles" }, h("div", { class: "seg-group", role: "group", "aria-label": "Período" }, ...botoes.map(([, b]) => b))),
+    area,
+    h("div", { class: "regra-box" },
+      h("b", {}, "Duas regras que nunca mudam"),
+      h("span", {}, "Saúde vai sempre para a responsável técnica, e Reclame Aqui sempre para um analista: risco ao cliente e resposta pública não ficam com uma máquina."),
+      h("span", {}, "E dinheiro (reembolso, estorno, reenvio) só sai automático quando a política permite e o valor é baixo; a IA não decide valores.")),
+    comoLer("A barra divide as conversas em três: o agente resolve; o agente só pede uma informação que falta (foto, data de recebimento) e depois resolve; ou a conversa vai para uma pessoa. Os botões alternam entre a fila de hoje e o trimestre inteiro."),
+    deOnde("o agente percorreu cada conversa: leu o motivo, consultou o pedido, conferiu a política e decidiu por uma tabela de regras. ",
+      "Sem IA na decisão: a mesma conversa sempre recebe a mesma decisão."));
 }
 
-function secaoP2(p2, custoTotal) {
-  const itens = p2?.itens || [];
-  const totalEvitavel = p2?.total_custo || 0;
-  const fatia = custoTotal ? totalEvitavel / custoTotal : null;
-
-  return h("section", { class: "card" },
-    h("div", { class: "secao-topo" },
-      h("div", {},
-        h("span", { class: "num-pergunta" }, "Pergunta 2"),
-        h("h2", { class: "pergunta" }, "Quais contatos poderiam não existir?")
-      ),
-      h("span", { class: "pill warn" },
-        `Até ${brl(totalEvitavel)} em contatos evitáveis${fatia ? ` (${pct(fatia)} do custo)` : ""}`
-      )
-    ),
-    h("p", { class: "secao-sub" },
-      "Contatos gerados por falta de aviso ativo, resposta incompleta na primeira interação ou fricção no autoatendimento."
-    ),
-    h("div", { class: "grade-evitaveis" },
-      ...itens.map(item =>
-        h("div", { class: "card-evitavel" },
-          h("div", { class: "topo-ev" },
-            h("span", { class: "tit-ev" }, item.rotulo),
-            h("span", { class: "custo-ev" }, `${brl(item.custo)} · ${intBR(item.conversas)} conv.`)
-          ),
-          h("p", { class: "acao-ev" }, item.como_evitar)
-        )
-      )
-    )
-  );
+function atoRespostas(d) {
+  return h("section", { class: "ato", id: "respostas" },
+    cabAto("resp-cab", "Parte 3 · As respostas",
+      "As quatro perguntas do desafio, respondidas com os dados",
+      "Cada resposta começa pela conclusão em uma frase. Em seguida vêm o gráfico, como lê-lo e de onde vêm os números."),
+    secaoP1(d), secaoP2(d), secaoP3(d), secaoP4(d));
 }
 
-function secaoP3(p3) {
-  const itens = p3?.itens || [];
-  return h("section", { class: "card" },
-    h("div", { class: "secao-topo" },
-      h("div", {},
-        h("span", { class: "num-pergunta" }, "Pergunta 3"),
-        h("h2", { class: "pergunta" }, "O que atacar primeiro, e com que critério?")
-      )
-    ),
-    h("div", { class: "criterio-box" },
-      h("b", {}, "Critério de priorização:"),
-      h("span", {}, p3?.criterio || "Custo trimestral × gravidade × facilidade de ação.")
-    ),
-    h("div", { class: "lista-rank" },
-      ...itens.map(item =>
-        h("div", { class: "item-rank" },
-          h("div", { class: "bola-rank" }, String(item.rank)),
-          h("div", { class: "corpo-rank" },
-            h("span", { class: "foco" }, item.foco),
-            h("span", { class: "porque" }, item.porque)
-          ),
-          h("div", { class: "numeros-rank" },
-            h("span", { class: "custo" }, brl(item.custo)),
-            h("span", { class: "conv" }, `${intBR(item.conversas)} conversas`)
-          )
-        )
-      )
-    )
-  );
+/* =====================================================================
+   ATO 4 · Três perguntas a mais (além das quatro do enunciado)
+   ===================================================================== */
+function extraForaDoHorario(d) {
+  const f = d.extras.fora_do_horario, hc = f.horario_comercial;
+  const mx = Math.max(...f.por_hora.map(x => x.conversas), 1);
+  const foraHora = (hora) => hora < hc.inicio || hora >= hc.fim;
+  return h("article", { class: "resp", id: "extra-horario" },
+    ...cabResposta("extra 1", "Quantos clientes escrevem quando só o bot responde?", [
+      h("b", {}, pct(f.pct_fora)), ` das conversas começam entre ${hc.fim}h e ${hc.inicio}h, quando não há atendente. `,
+      `O agente teria resolvido `, h("b", {}, `${pct(f.pct_resolviveis_fora)} delas na hora`), ", sem esperar o dia seguinte."]),
+    h("div", { class: "horas", role: "img", "aria-label": "Conversas iniciadas por hora do dia; em laranja, as horas sem atendente" },
+      ...f.por_hora.map(x => h("div", { class: foraHora(x.hora) ? "fora" : "", style: `height:${(100 * x.conversas / mx).toFixed(1)}%`,
+        "data-tip": `${x.hora}h: ${intBR(x.conversas)} conversas${foraHora(x.hora) ? " (só o bot responde)" : ""}` }))),
+    h("div", { class: "horas-rot", "aria-hidden": "true" }, ...f.por_hora.map(x => h("span", {}, x.hora % 3 === 0 ? `${x.hora}h` : ""))),
+    h("div", { class: "legenda" },
+      h("span", {}, h("i", { class: "qd", style: "background:var(--c1)" }), `com atendente (${hc.inicio}h–${hc.fim}h)`),
+      h("span", {}, h("i", { class: "qd", style: "background:var(--human)" }), "só o bot")),
+    h("div", { class: "insights" },
+      ...f.por_canal.map(c => h("div", { class: "insight" }, h("span", { class: "rot" }, c.rotulo),
+        h("span", { class: "val" }, pct(c.pct_fora)), h("span", { class: "det" }, `${intBR(c.fora)} de ${intBR(c.conversas)} fora do horário`)))),
+    comoLer("Cada barra é uma hora do dia; a altura é quantas conversas começaram naquela hora. As barras laranja são as horas em que só o bot responde. O cliente escreve a qualquer hora; o atendimento, não."),
+    deOnde("hora da primeira mensagem do cliente em cada conversa. “Resolveria na hora” = conversas fora do horário que o agente classificou como automáticas na simulação do trimestre inteiro (Pergunta 4)."));
 }
 
-function secaoP4(p4) {
-  const total = p4?.fila_avaliada || 0;
-  const auto = p4?.automatico || 0;
-  const hum = p4?.humano || 0;
-  const pAuto = total ? auto / total : 0;
-  const pHum = total ? hum / total : 0;
-
-  const acoes = p4?.por_acao || [];
-  const filas = p4?.por_fila_humana || [];
-  const politicas = p4?.politicas_faltantes || [];
-
-  return h("section", { class: "card" },
-    h("div", { class: "secao-topo" },
-      h("div", {},
-        h("span", { class: "num-pergunta" }, "Pergunta 4"),
-        h("h2", { class: "pergunta" }, "O que o sistema faz sozinho e o que precisa de pessoa?")
-      ),
-      h("span", { class: "pill acc" }, `${intBR(total)} conversas avaliadas na fila pendente/reaberta`)
-    ),
-    h("div", { class: "barra-divisao" },
-      h("div", { class: "rotulos-div" },
-        h("span", { class: "rot-auto" }, `✓ Automático: ${pct(pAuto)} (${intBR(auto)} conversas)`),
-        h("span", { class: "rot-hum" }, `→ Pessoa (com dossiê): ${pct(pHum)} (${intBR(hum)} conversas)`)
-      ),
-      h("div", { class: "trilho-div", role: "img", "aria-label": `Divisão entre automático (${pct(pAuto)}) e humano (${pct(pHum)})` },
-        h("div", { class: "seg-auto", style: `width:${(pAuto * 100).toFixed(1)}%` }),
-        h("div", { class: "seg-hum", style: `width:${(pHum * 100).toFixed(1)}%` })
-      ),
-      h("p", { class: "nota-resolucao" },
-        `Dos casos automáticos, uma parte apenas solicita a foto ou informação obrigatória ao cliente; a resolução direta imediata fica em `,
-        h("b", {}, pct(p4?.resolucao_completa_pct)),
-        ` da fila. Casos de saúde e Reclame Aqui têm regra inegociável e vão sempre para uma pessoa.`
-      )
-    ),
-    h("div", { class: "colunas-p4" },
-      h("div", { class: "bloco-p4" },
-        h("h3", {}, "Ações que o agente faz sozinho"),
-        h("div", { class: "lista-simples" },
-          ...acoes.map(a =>
-            h("div", { class: "linha-simples" },
-              h("div", { class: "topo-s" },
-                h("span", { class: "rot-s" }, a.rotulo || a.acao),
-                h("span", { class: "val-s" }, intBR(a.conversas))
-              )
-            )
-          )
-        )
-      ),
-      h("div", { class: "bloco-p4" },
-        h("h3", {}, "Filas humanas (encaminhadas com dossiê)"),
-        h("div", { class: "lista-simples" },
-          ...filas.map(f =>
-            h("div", { class: "linha-simples" },
-              h("div", { class: "topo-s" },
-                h("span", { class: "rot-s" }, f.rotulo || f.fila),
-                h("span", { class: "val-s" }, intBR(f.conversas))
-              )
-            )
-          )
-        )
-      ),
-      h("div", { class: "bloco-p4" },
-        h("h3", {}, "Políticas que destravariam mais automação"),
-        h("div", { class: "lista-simples" },
-          ...politicas.map(pol =>
-            h("div", { class: "linha-simples" },
-              h("div", { class: "topo-s" },
-                h("span", { class: "rot-s" }, pol.rotulo || pol.motivo),
-                h("span", { class: "val-s" }, `${intBR(pol.conversas)} conv.`)
-              ),
-              pol.sugestao ? h("span", { class: "sug-s" }, pol.sugestao) : null
-            )
-          )
-        )
-      )
-    )
-  );
+function extraTransportadoras(d) {
+  const t = d.extras.transportadoras, pior = t.itens[0];
+  const outras = t.itens.slice(1);
+  const mediaOutras = outras.reduce((a, x) => a + x.pct_atrasados, 0) / Math.max(outras.length, 1);
+  const mx = Math.max(...t.itens.flatMap(x => [x.pct_pedidos, x.pct_contatos_entrega]), 0.01);
+  const linha = (rot, v, cor) => h("div", { class: "linha-barra" }, h("span", { class: "rot" }, rot), barraSimples(v / mx, cor), h("span", { class: "pct" }, pct(v)));
+  return h("article", { class: "resp", id: "extra-transportadora" },
+    ...cabResposta("extra 2", "Qual transportadora gera mais atraso e mais contato?", [
+      h("b", {}, pior.transportadora), `: ${pct(pior.pct_atrasados, 1)} dos pedidos atrasados, contra ${pct(mediaOutras, 1)} na média das outras. `,
+      `Com ${pct(pior.pct_pedidos)} dos pedidos, ela concentra `, h("b", {}, `${pct(pior.pct_contatos_entrega)} dos contatos sobre entrega`), "."]),
+    h("div", { class: "legenda" },
+      h("span", {}, h("i", { class: "qd", style: "background:var(--c3)" }), "fatia dos pedidos"),
+      h("span", {}, h("i", { class: "qd", style: "background:var(--c1)" }), "fatia dos contatos sobre entrega")),
+    h("div", { class: "transp" }, ...t.itens.map((x, i) => h("div", { class: "lin",
+        "data-tip": `${x.transportadora}: ${intBR(x.pedidos)} pedidos, ${intBR(x.atrasados)} atrasados (${pct(x.pct_atrasados, 1)}), ${intBR(x.contatos_entrega)} contatos de entrega (${brl(x.custo_entrega)} no trimestre)` },
+      h("div", { class: "cab" },
+        h("span", { class: "nome" }, x.transportadora, h("span", { class: "pill " + (i === 0 ? "hum" : "sp") }, `${pct(x.pct_atrasados, 1)} atrasados`)),
+        h("span", { class: "metricas muted", style: "font-size:.8rem" }, `${intBR(x.contatos_entrega)} contatos · ${brl(x.custo_entrega)}`)),
+      linha("Pedidos", x.pct_pedidos, "--c3"),
+      linha("Contatos", x.pct_contatos_entrega, "--c1")))),
+    h("p", { class: "resposta", style: "font-size:.92rem" }, h("b", {}, "O que fazer: "),
+      `levar estes números à ${pior.transportadora}: ${intBR(pior.contatos_entrega)} contatos de entrega no trimestre (${brl(pior.custo_entrega)} em atendimento) ligados aos pedidos dela.`),
+    comoLer("Para cada transportadora, a barra azul é a fatia dos pedidos que ela entrega e a roxa é a fatia dos contatos sobre atraso ou rastreio. Quando a roxa passa muito da azul, a transportadora gera contato além do seu tamanho."),
+    deOnde("pedidos dos clientes que procuraram o atendimento (por isso comparamos fatias, e não “contatos por pedido”). Contato de entrega = motivo principal atraso ou dúvida de rastreio, com pedido vinculado; atrasado = status do pedido no fim do período."));
 }
 
-async function carregarDiagnostico() {
+function extraReclameAqui(d) {
+  const r = d.extras.reclame_aqui_antes;
+  return h("article", { class: "resp", id: "extra-reclame-aqui" },
+    ...cabResposta("extra 3", "Quem foi ao Reclame Aqui já tinha falado com a gente?", [
+      h("b", {}, pct(r.pct_com_contato_anterior)), ` dos clientes do Reclame Aqui já tinham aberto uma conversa antes, ${pct(r.pct_canal_barato_antes)} por WhatsApp ou e-mail. `,
+      "O canal mais caro é, em boa parte, ", h("b", {}, "a segunda tentativa"), " de quem não foi resolvido na primeira."]),
+    h("div", { class: "funil-ra" },
+      h("div", {}, h("span", { class: "seta" }, "Reclame Aqui"), h("span", { class: "g" }, intBR(r.conversas)), h("span", { class: "p" }, "conversas no trimestre (amostra)")),
+      h("div", {}, h("span", { class: "seta" }, "→ já tinham contato antes"), h("span", { class: "g" }, intBR(r.com_contato_anterior)),
+        h("span", { class: "p" }, `${pct(r.pct_com_contato_anterior)} · ${intBR(r.canal_barato_antes)} por WhatsApp ou e-mail`)),
+      h("div", { style: "border-color:var(--human)" }, h("span", { class: "seta", style: "color:var(--human)" }, "→ sobre o mesmo pedido"), h("span", { class: "g" }, intBR(r.mesmo_pedido_antes)),
+        h("span", { class: "p" }, `${pct(r.pct_mesmo_pedido_antes)} · o problema já era conhecido`))),
+    h("p", { class: "resposta", style: "font-size:.92rem" }, h("b", {}, brl(r.custo_com_contato_anterior)), " no trimestre em Reclame Aqui de clientes que a empresa já conhecia. Resolver na primeira conversa é a forma mais barata de reduzir o canal mais caro."),
+    comoLer("Três números em sequência: todas as conversas do Reclame Aqui; quantas vieram de clientes que já tinham falado com a empresa; e, dessas, quantas eram sobre o mesmo pedido."),
+    deOnde("contato anterior = outra conversa do mesmo cliente aberta antes (qualquer canal); mesmo pedido = mesmo número de pedido. Custo = conversas do Reclame Aqui com contato anterior × preço do canal × ",
+      `${d.totais.fator_expansao}.`));
+}
+
+function atoExtras(d) {
+  return h("section", { class: "ato", id: "extras" },
+    cabAto("extras-cab", "Parte 4 · Três perguntas a mais",
+      "O que mais os dados contam, além das quatro perguntas do desafio",
+      "Três achados que surgiram no caminho e mudam o que a liderança pode fazer: um sobre horário, um sobre logística e um sobre o canal mais caro."),
+    extraForaDoHorario(d), extraTransportadoras(d), extraReclameAqui(d));
+}
+
+function rodape(d) {
+  const c = d.classificacao;
+  return [
+    h("p", {}, h("b", {}, "Limitações, em linguagem simples:")),
+    h("ul", {},
+      h("li", {}, `A conferência da classificação usou ${c.amostra_gabarito} conversas rotuladas com ajuda de IA, sem revisão humana.`),
+      h("li", {}, "Os pedidos não trazem a data de entrega; para prazos como o de arrependimento, usamos a data da compra (a conta mais segura)."),
+      h("li", {}, "Os custos são médias por canal informadas pela empresa; o SLA foi medido em horas corridas, sem considerar o horário comercial."),
+      h("li", {}, `Contagens de conversas são da amostra; valores em reais foram multiplicados por ${d.totais.fator_expansao} para representar a operação inteira.`)),
+    h("p", {}, "Página feita só com números agregados: nenhum texto de conversa, nome, pedido ou identificador de cliente. ",
+      h("a", { href: "index.html" }, "Testar o agente ao vivo →"), " · ",
+      h("a", { href: "https://github.com/caiolucasprogramador/desafio-gogroup", target: "_blank", rel: "noopener noreferrer" }, "Código no GitHub ↗")),
+  ];
+}
+
+async function iniciar() {
   iniciarTema();
+  iniciarTooltip();
   try {
     const r = await fetch("diagnostico.json");
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
-
-    renderizarTopo(d);
-    $("conteudo").replaceChildren(
-      secaoP1(d.p1_por_que_procuram),
-      secaoP2(d.p2_contatos_evitaveis, d.totais?.custo_estimado),
-      secaoP3(d.p3_atacar_primeiro),
-      secaoP4(d.p4_sozinho_ou_pessoa)
-    );
-
-    if (d.classificacao?.observacao) {
-      $("obs-classificacao").textContent =
-        `Nota sobre a avaliação da classificação (${intBR(d.classificacao.amostra_gabarito)} conversas no gabarito, recall de ${pct(d.classificacao.recall_motivos, 1)}): ${d.classificacao.observacao}`;
-    }
+    $("hero-sub").textContent = `Um agente de IA leu as ${intBR(d.totais.conversas)} conversas do trimestre e cruzou cada uma com o pedido e as políticas da empresa. Isto é o que ele encontrou, em números.`;
+    $("conteudo").replaceChildren(atoDados(d), atoProblemas(d), atoRespostas(d), atoExtras(d));
+    $("rodape").replaceChildren(...rodape(d));
   } catch (e) {
-    $("conteudo").replaceChildren(
-      h("div", { class: "erro" }, "Não foi possível carregar o diagnóstico: " + e.message)
-    );
+    $("conteudo").replaceChildren(h("div", { class: "erro" }, "Não foi possível carregar o diagnóstico: " + e.message));
   }
 }
-
-carregarDiagnostico();
+iniciar();
 </script>
 </body>
 </html>

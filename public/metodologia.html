@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metodologia do Agente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Mesmos tokens do Diagnóstico (paleta categórica validada: c1→c4). */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --surface-2: #eef1f5; --line: #dee3ea;
+  --fg: #161a22; --muted: #5f6573; --faint: #8e95a2;
+  --accent: #0062b1; --accent-soft: #ddebf8; --accent-fg: #ffffff;
+  --auto: #1f7a55; --auto-soft: #def3e9;
+  --human: #b4561b; --human-soft: #fbe9dc;
+  --warn: #8a6a00; --warn-soft: #f8f0cf;
+  --bad: #b3263a; --bad-soft: #fbe2e6;
+  --c1: #0062b1; --c2: #e05aae; --c3: #e0583a; --c4: #1e9e9e; --c0: #b4bac4;
+  --shadow: 0 1px 2px rgba(10, 30, 60, .06), 0 4px 16px rgba(10, 30, 60, .05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+    --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+    --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
+    --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+    --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+    --c1: #3a86cf; --c2: #cf4399; --c3: #d9663f; --c4: #2aa8a8; --c0: #444c58;
+    --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+  --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+  --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
+  --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
+  --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
+  --c1: #3a86cf; --c2: #cf4399; --c3: #d9663f; --c4: #2aa8a8; --c0: #444c58;
+  --shadow: none; color-scheme: dark;
+}
+/* Faixa com as cores da identidade Gocase (só as cores; nenhuma marca, logo ou forma) */
+:root { --g-azul: #0062b1; --g-magenta: #ee3fac; --g-coral: #ff6e50; --g-turquesa: #78d8d8; --g-amarelo: #eeee96; --g-rosa: #ffd1dc; }
+body::before { content: ""; display: block; height: 6px;
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  background: linear-gradient(90deg, var(--g-azul) 0 16.66%, var(--g-magenta) 0 33.33%, var(--g-coral) 0 50%,
+                                     var(--g-turquesa) 0 66.66%, var(--g-amarelo) 0 83.33%, var(--g-rosa) 0); }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+html, body { margin: 0; overflow-x: hidden; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.6 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 22px 64px; display: grid; gap: 30px; min-width: 0; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
+p { margin: 0; }
+a { color: var(--accent); }
+code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em; }
+code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
+.muted { color: var(--muted); }
+
+/* navegação */
+.topbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.nav-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border: 1px solid var(--line);
+            border-radius: 999px; padding: 4px; box-shadow: var(--shadow); }
+.nav-tab { text-decoration: none; color: var(--muted); font-size: .84rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; }
+.nav-tab:hover { color: var(--fg); }
+.nav-tab.ativo { background: var(--accent); color: var(--accent-fg); }
+.acoes-topo { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-topo { font: inherit; font-size: .8rem; font-weight: 500; color: var(--muted); background: var(--surface);
+            border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; text-decoration: none; }
+.btn-topo:hover { color: var(--fg); border-color: var(--accent); }
+
+/* abertura */
+.hero { display: grid; gap: 14px; padding-block: 18px 4px; }
+.hero .tag { font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { font-size: clamp(1.7rem, 4.2vw, 2.6rem); font-weight: 700; letter-spacing: -.02em; }
+.hero .sub { font-size: 1.06rem; color: var(--muted); max-width: 64ch; }
+.sumario { display: flex; flex-wrap: wrap; gap: 6px; }
+.sumario a { text-decoration: none; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+             color: var(--fg); font-weight: 600; font-size: .82rem; }
+.sumario a:hover { border-color: var(--accent); }
+.sumario a small { color: var(--accent); font-weight: 700; margin-right: 4px; }
+
+/* seções */
+.secao { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: var(--shadow);
+         display: grid; gap: 18px; min-width: 0; scroll-margin-top: 16px; transition: box-shadow .4s ease, border-color .4s ease; }
+@media (max-width: 520px) { .secao { padding: 18px 14px; } }
+.secao:target, .sub-bloco:target { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.secao .eyebrow { font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.secao h2 { font-size: clamp(1.25rem, 2.6vw, 1.55rem); font-weight: 700; letter-spacing: -.015em; margin-top: 4px; }
+.secao .intro { color: var(--muted); max-width: 72ch; font-size: .98rem; }
+.secao .vindo { font-size: .8rem; color: var(--faint); }
+.sub-bloco { border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; scroll-margin-top: 16px; min-width: 0; }
+.sub-bloco h3 { font-size: 1.05rem; font-weight: 700; }
+
+/* O que é / Como medimos / Por que assim / Limitação */
+.quad { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 720px) { .quad { grid-template-columns: minmax(0, 1fr); } }
+.q { border-radius: 12px; padding: 14px 16px; background: var(--surface-2); display: grid; gap: 6px; align-content: start; min-width: 0;
+     border-left: 4px solid var(--c0); font-size: .92rem; }
+.q b.t { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.q.oque { border-left-color: var(--c3); } .q.oque b.t { color: var(--c3); }
+.q.como { border-left-color: var(--c1); } .q.como b.t { color: var(--accent); }
+.q.porque { border-left-color: var(--auto); } .q.porque b.t { color: var(--auto); }
+.q.limite { border-left-color: var(--human); } .q.limite b.t { color: var(--human); }
+.q ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* números em destaque */
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.num { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.num .v { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.num .l { font-size: .8rem; color: var(--muted); }
+
+/* fluxo */
+.fluxo { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.no { flex: 1 1 150px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface-2);
+      display: grid; gap: 6px; align-content: start; position: relative; }
+.no.ia { border-color: var(--accent); background: var(--accent-soft); }
+.no .topo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 6px; align-items: center; }
+.no .nome { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .72rem; font-weight: 500; color: var(--muted);
+            overflow-wrap: anywhere; min-width: 0; }
+.no .tit { font-weight: 700; font-size: .92rem; line-height: 1.25; }
+.no .txt { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+.badge { font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; white-space: nowrap; }
+.badge.ia { background: var(--accent); color: var(--accent-fg); }
+.badge.regra { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+.fim { flex: 1 1 260px; display: grid; gap: 8px; }
+.fim .no.auto { border-color: var(--auto); background: var(--auto-soft); }
+.fim .no.hum { border-color: var(--human); background: var(--human-soft); }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); align-items: center; }
+
+/* barras */
+.barras { display: grid; gap: 8px; }
+.barra { display: grid; grid-template-columns: minmax(0, 10em) minmax(0, 1fr) 3.4em; gap: 10px; align-items: center; font-size: .86rem; }
+.barra .v { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.trilho-b { height: 10px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.trilho-b > div { height: 100%; border-radius: 0 4px 4px 0; }
+
+/* tabelas */
+details.tabela { border: 1px solid var(--line); border-radius: 12px; }
+details.tabela summary { cursor: pointer; font-weight: 600; color: var(--accent); padding: 12px 14px; font-size: .9rem; }
+.tabela-wrap { overflow-x: auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: left; border-top: 1px solid var(--line); vertical-align: top; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+td.dir, th.dir { text-align: right; }
+.grav { display: inline-flex; align-items: center; gap: 8px; }
+.grav i { display: inline-block; height: 8px; border-radius: 3px; background: var(--c1); }
+.grav i.sau { background: var(--human); }
+
+.pill { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.pill.ok { background: var(--auto-soft); color: var(--auto); }
+.pill.no { background: var(--bad-soft); color: var(--bad); }
+.pill.ind { background: var(--warn-soft); color: var(--warn); }
+.pill.sp { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.pill.hum { background: var(--human-soft); color: var(--human); }
+.resultados { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .resultados { grid-template-columns: minmax(0, 1fr); } }
+.resultados > div { display: grid; gap: 4px; font-size: .86rem; justify-items: start; }
+
+.passos { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .92rem; }
+.citacao { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; color: var(--muted); font-size: .92rem; }
+
+/* diário */
+.diario { display: grid; gap: 0; }
+.ep { display: grid; grid-template-columns: 34px minmax(0, 1fr); column-gap: 14px; }
+.ep .trilho { display: flex; flex-direction: column; align-items: center; }
+.ep .bola { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-weight: 700;
+            font-size: .82rem; display: grid; place-items: center; flex: none; }
+.ep .fio { flex: 1; width: 2px; background: var(--line); min-height: 14px; }
+.ep .corpo { padding: 2px 0 22px; display: grid; gap: 8px; min-width: 0; }
+.ep .tit { font-weight: 700; font-size: 1rem; }
+.ep .tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 760px) { .ep .tres { grid-template-columns: minmax(0, 1fr); } }
+.ep .tres div { border-radius: 10px; padding: 10px 12px; font-size: .86rem; background: var(--surface-2); display: grid; gap: 3px; align-content: start; }
+.ep .tres b { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ep .tres .p b { color: var(--human); }
+.ep .tres .d b { color: var(--accent); }
+.ep .tres .r b { color: var(--auto); }
+
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--fg); color: var(--bg); font-size: .8rem;
+       padding: 6px 10px; border-radius: 8px; max-width: 260px; line-height: 1.4; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+.erro { background: var(--bad-soft); color: var(--bad); border-radius: 11px; padding: 14px 16px; }
+footer { color: var(--muted); font-size: .84rem; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar" aria-label="Navegação principal">
+    <div class="nav-tabs">
+      <a class="nav-tab" href="diagnostico.html">Diagnóstico</a>
+      <a class="nav-tab" href="index.html">Testar o agente</a>
+      <a class="nav-tab ativo" href="metodologia.html" aria-current="page">Metodologia</a>
+    </div>
+    <div class="acoes-topo">
+      <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <button type="button" class="btn-topo" id="btn-tema" aria-label="Alternar tema claro ou escuro">Tema</button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="tag">Metodologia</span>
+    <h1>Como chegamos a cada número</h1>
+    <p class="sub">O Diagnóstico mostra o que encontramos. Esta página mostra como: o que o agente faz em cada etapa, como cada número foi medido, por que escolhemos cada caminho, onde o método tem limites e os problemas que enfrentamos até aqui.</p>
+    <nav class="sumario" aria-label="Seções" id="sumario"></nav>
+  </header>
+
+  <main id="conteudo" style="display:grid;gap:22px;min-width:0"></main>
+  <footer id="rodape"></footer>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs = {}, ...filhos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.style.cssText = v;
+    else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
+  }
+  for (const f of filhos.flat()) if (f !== null && f !== undefined && f !== false)
+    el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+  return el;
+}
+const intBR = (v) => v == null ? "—" : Number(v).toLocaleString("pt-BR");
+const brl = (v, cent = false) => v == null ? "—" : Number(v).toLocaleString("pt-BR",
+  { style: "currency", currency: "BRL", minimumFractionDigits: cent ? 2 : 0, maximumFractionDigits: cent ? 2 : 0 });
+const pct = (v, casas = 0) => v == null ? "—" : (Number(v) * 100).toLocaleString("pt-BR",
+  { minimumFractionDigits: casas, maximumFractionDigits: casas }) + "%";
+const dec = (v) => String(v).replace(".", ",");
+const rotulo = (s) => (s || "").replaceAll("_", " ");
+
+function iniciarTema() {
+  let salvo = null;
+  try { salvo = localStorage.getItem("tema"); } catch { /* sem storage */ }
+  if (salvo === "light" || salvo === "dark") document.documentElement.setAttribute("data-theme", salvo);
+  const escuro = () => {
+    const a = document.documentElement.getAttribute("data-theme");
+    return a ? a === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const rot = () => { $("btn-tema").textContent = escuro() ? "☀ Claro" : "☾ Escuro"; };
+  rot();
+  $("btn-tema").addEventListener("click", () => {
+    const novo = escuro() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", novo);
+    try { localStorage.setItem("tema", novo); } catch { /* sem storage */ }
+    rot();
+  });
+}
+function iniciarTooltip() {
+  const tip = $("tip");
+  document.addEventListener("pointerover", (e) => {
+    const alvo = e.target.closest?.("[data-tip]");
+    if (alvo) { tip.textContent = alvo.getAttribute("data-tip"); tip.hidden = false; }
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (tip.hidden) return;
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8) + "px";
+    tip.style.top = (e.clientY + 16) + "px";
+  });
+  document.addEventListener("pointerout", (e) => {
+    if (e.target.closest?.("[data-tip]") && !e.relatedTarget?.closest?.("[data-tip]")) tip.hidden = true;
+  });
+}
+
+/* ---------- rótulos legíveis (vindos do JSON; fallback para o código) ---------- */
+let ROT = { motivo: {}, categoria: {}, acao: {} };
+const ACAO_EXTRA = { troca_fragrancia: "Troca de fragrância", registro_cosmetovigilancia: "Registro de cosmetovigilância",
+                     alterar_endereco: "Alterar endereço" };
+function carregarRotulos(d) {
+  const par = d.metodologia.parametros, p1 = d.p1_por_que_procuram, p4 = d.p4_sozinho_ou_pessoa;
+  par.gravidade.forEach(x => { ROT.motivo[x.motivo] = x.rotulo; });
+  p1.categorias.forEach(x => { ROT.categoria[x.categoria] = x.rotulo; });
+  [...p4.por_acao, ...p4.historico.por_acao].forEach(x => { ROT.acao[x.acao] = x.rotulo; });
+  Object.assign(ROT.acao, ACAO_EXTRA, ROT.acao);
+}
+const rotMotivo = (m) => ROT.motivo[m] || rotulo(m);
+const rotCategoria = (c) => ROT.categoria[c] || rotulo(c);
+const rotAcao = (a) => ROT.acao[a] || rotulo(a);
+const nomePolitica = (texto) => texto.split(":")[0];
+
+/* ---------- componentes ---------- */
+const SECOES = [];
+function secao(id, num, titulo, intro, ...corpo) {
+  SECOES.push({ id, num, titulo });
+  return h("section", { class: "secao", id },
+    h("div", {}, h("span", { class: "eyebrow" }, `${num} · ${titulo.split(":")[0]}`), h("h2", {}, titulo)),
+    intro ? h("p", { class: "intro" }, ...[].concat(intro)) : null,
+    ...corpo);
+}
+function quad({ oque, como, porque, limite }) {
+  const q = (cls, t, conteudo) => conteudo ? h("div", { class: "q " + cls }, h("b", { class: "t" }, t), ...[].concat(conteudo)) : null;
+  return h("div", { class: "quad" },
+    q("oque", "O que é", oque), q("como", "Como medimos", como), q("porque", "Por que assim", porque), q("limite", "Limitação", limite));
+}
+const lista = (...itens) => h("ul", {}, ...itens.map(i => h("li", {}, ...[].concat(i))));
+const nums = (...itens) => h("div", { class: "nums" }, ...itens.map(([v, l]) => h("div", { class: "num" }, h("span", { class: "v" }, v), h("span", { class: "l" }, l))));
+const barraSimples = (frac, cor) => h("div", { class: "trilho-b" }, h("div", { style: `width:${Math.max(0, Math.min(100, frac * 100)).toFixed(1)}%;background:var(${cor})` }));
+
+/* =========================== 1 · fluxo =========================== */
+const NOS = [
+  ["anonimizar", "Protege os dados", "regra", "Troca CPF, cartão, telefone e e-mail por marcadores antes de qualquer envio à IA."],
+  ["classificar", "Entende o pedido", "ia", "Lê a conversa e aponta todos os motivos, o tom e se o cliente está voltando, com a frase que comprova cada motivo."],
+  ["enriquecer", "Consulta o pedido", "regra", "Cruza com status, valor, data da compra e contatos anteriores. Corrige a IA quando um fato a contradiz."],
+  ["priorizar", "Calcula a urgência", "regra", "Nota de 0 a 100 para ordenar a fila. Saúde fura a fila."],
+  ["checar_elegibilidade", "Confere as políticas", "regra", "Para cada motivo: a política permite? Falta alguma informação?"],
+  ["regras_fixas", "Regras inegociáveis", "regra", "Saúde e Reclame Aqui vão direto para uma pessoa."],
+  ["decidir", "Decide cada assunto", "regra", "Tabela de decisão: o que tem regra e cabe no limite é automático; o resto vai para uma pessoa."],
+];
+function secaoFluxo() {
+  const no = ([nome, tit, tipo, txt], extra = "") => h("div", { class: `no ${tipo === "ia" ? "ia" : ""} ${extra}` },
+    h("div", { class: "topo" }, h("span", { class: "nome" }, nome), h("span", { class: "badge " + tipo }, tipo === "ia" ? "IA" : "regra")),
+    h("span", { class: "tit" }, tit), h("span", { class: "txt" }, txt));
+  return secao("fluxo", 1, "O caminho de uma conversa",
+    "Toda conversa passa pelas mesmas etapas, nesta ordem. É o mesmo caminho na tela “Testar o agente” e nas 4.000 conversas do Diagnóstico.",
+    h("div", { class: "fluxo" }, ...NOS.map(n => no(n)),
+      h("div", { class: "fim" },
+        no(["agir", "Responde ao cliente", "regra", "Executa as ações e escreve a resposta: um parágrafo por assunto."], "auto"),
+        no(["escalar_humano", "Encaminha a uma pessoa", "regra", "Envia para a equipe certa com um dossiê pronto."], "hum"))),
+    h("div", { class: "legenda" }, h("span", { class: "badge ia" }, "IA"), "usa modelo de linguagem",
+      h("span", { class: "badge regra" }, "regra"), "código determinístico: a mesma conversa sempre dá o mesmo resultado"),
+    h("p", { class: "citacao" }, "Só uma etapa usa IA: entender o que o cliente quer. Tudo o que envolve dinheiro, saúde ou promessa ao cliente é regra escrita, conferível e testada."));
+}
+
+/* =========================== 2 · amostra =========================== */
+function secaoAmostra(d) {
+  const t = d.totais, m = d.metodologia, p1 = d.p1_por_que_procuram;
+  const ra = p1.canais.find(c => c.canal === "reclame_aqui");
+  return secao("amostra", 2, "Os dados e a escala",
+    "O case trouxe uma amostra, não a operação inteira. Entender isso evita o erro mais comum ao ler os números.",
+    nums([intBR(t.conversas), "conversas na amostra"], [`1 em ${t.fator_expansao}`, "clientes da operação"],
+      [`~${intBR(t.conversas_estimadas)}`, "conversas na operação"], [intBR(m.mensagens), "mensagens lidas"]),
+    quad({
+      oque: [h("p", {}, `A empresa recebeu ~${intBR(t.conversas_estimadas)} conversas no trimestre. O case trouxe todas as conversas de 1 em cada ${t.fator_expansao} clientes, sorteados: ${intBR(t.conversas)} conversas.`)],
+      como: [lista(
+        [h("b", {}, "Contagens"), ` (conversas, casos) estão na escala da amostra: ${intBR(t.conversas)}.`],
+        [h("b", {}, "Valores em reais"), ` estão na escala da operação: custo da amostra × ${t.fator_expansao}.`],
+        [h("b", {}, "Percentuais"), " são iguais nas duas escalas: multiplicar tudo por 3 não muda as proporções."])],
+      porque: [h("p", {}, "Reais na escala da operação respondem à pergunta da liderança (quanto isso custa à empresa). Contagens na amostra são o que de fato lemos, sem estimativa.")],
+      limite: [h("p", {}, "A expansão supõe que a amostra representa a operação. Como os clientes foram sorteados, é uma suposição razoável, mas não uma certeza.")],
+    }),
+    h("div", { class: "sub-bloco", id: "custos" },
+      h("h3", {}, "Como calculamos o custo"),
+      quad({
+        oque: [h("p", {}, "O custo médio de cada conversa por canal, informado pela empresa: ",
+          ...p1.canais.map((c, i) => [i ? ", " : "", h("b", {}, `${c.rotulo} ${brl(c.custo_unitario, true)}`)]).flat(),
+          ". O do Reclame Aqui inclui tempo de analista e impacto na reputação.")],
+        como: [h("p", {}, `Custo de um motivo = soma do preço do canal de cada conversa desse motivo × ${t.fator_expansao}. Uma conversa com vários assuntos conta inteira para o motivo principal (o mais grave), para que os custos somem exatamente o total de ${brl(t.custo_estimado)}.`)],
+        porque: [h("p", {}, `É o preço de a conversa existir. Por isso o Reclame Aqui, com ${pct(ra.pct_conversas)} das conversas, tem ${pct(ra.pct_custo)} do custo.`)],
+        limite: [h("p", {}, "O custo é uma média por canal: uma conversa longa custa o mesmo que uma curta. E ele não mede quanto se economiza automatizando: quando o agente resolve, a conversa continua existindo; o case não informa quanto custa uma conversa resolvida pelo agente.")],
+      })));
+}
+
+/* =========================== 3 · classificação =========================== */
+function secaoClassificacao(d) {
+  const c = d.classificacao, m = d.metodologia, par = m.parametros;
+  const porCat = {};
+  par.gravidade.forEach(x => { porCat[x.categoria] = (porCat[x.categoria] || 0) + 1; });
+  const tabela = h("details", { class: "tabela" },
+    h("summary", {}, `Ver os ${par.gravidade.length} motivos e a gravidade de cada um`),
+    h("div", { class: "tabela-wrap" }, h("table", {},
+      h("thead", {}, h("tr", {}, h("th", {}, "Motivo"), h("th", {}, "Categoria"), h("th", {}, "Gravidade (0 a 100)"))),
+      h("tbody", {}, ...par.gravidade.map(x => h("tr", {},
+        h("td", {}, h("b", {}, x.rotulo), " ", h("span", { class: "mono muted" }, x.motivo)),
+        h("td", {}, rotCategoria(x.categoria)),
+        h("td", {}, h("span", { class: "grav" }, h("i", { class: x.categoria === "saude" ? "sau" : "", style: `width:${Math.max(2, x.gravidade * 0.9)}px` }), x.gravidade))))))));
+
+  return secao("classificacao", 3, "Como o agente classifica cada conversa",
+    "É a única etapa com IA. O resultado alimenta todo o resto: o custo por motivo, a prioridade e a decisão.",
+    quad({
+      oque: [lista(
+        [h("b", {}, `${par.gravidade.length} motivos em ${Object.keys(porCat).length} categorias`), ", desenhados a partir das políticas da empresa. Exemplo: “troca de fragrância” é separada de “outras trocas” porque só ela tem política escrita."],
+        [h("b", {}, "Vários motivos por conversa"), `, cada um com a frase do cliente que o comprova (${pct(m.pct_multimotivo)} das conversas têm mais de um).`],
+        [h("b", {}, "O tom"), " (neutro, irritado, urgente) e se o cliente está ", h("b", {}, "voltando a perguntar"), "."])],
+      como: [lista(
+        ["O texto é anonimizado e enviado ao modelo ", h("code", {}, par.modelo_classificacao), ", que responde num formato fixo (JSON com campos validados), sem texto livre."],
+        [h("b", {}, "Motivo principal = o mais grave"), " da conversa (régua de gravidade abaixo). Em empate, o primeiro citado."],
+        [h("b", {}, "Correção por fatos:"), " se o cliente pergunta do rastreio e o pedido consta como atrasado, o motivo vira “atraso”. O dado vence a interpretação."])],
+      porque: [h("p", {}, "Saída estruturada permite conferir e testar. A régua de gravidade é a mesma usada na prioridade: o “motivo principal” e a “urgência” falam a mesma língua. Antes, o principal era o primeiro citado, e uma reação alérgica mencionada depois de uma dúvida de rastreio ficava em segundo plano.")],
+      limite: [h("p", {}, "O modelo pode errar a interpretação, principalmente em mensagens curtas ou ambíguas. Por isso a decisão nunca depende só dele: as regras conferem o pedido e as políticas antes de agir.")],
+    }),
+    tabela,
+    h("div", { class: "sub-bloco", id: "gabarito" },
+      h("h3", {}, "Como medimos o acerto"),
+      nums([pct(c.acerto_agente, 1), "agente acerta o motivo principal"], [pct(c.acerto_tag_manual, 1), "etiqueta manual acerta"],
+        [pct(c.recall_motivos, 1), "dos motivos encontrados"], [c.saude_detectada, "casos de saúde detectados"]),
+      quad({
+        como: [h("p", {}, `Separamos ${c.amostra_gabarito} conversas variadas e definimos, uma a uma, os motivos corretos (o gabarito). Depois comparamos com o que o agente respondeu e com a etiqueta manual do atendente, usando a mesma régua: o motivo principal bate?`)],
+        porque: [h("p", {}, "Medir o agente e a etiqueta da mesma forma é o que torna a comparação justa. Recall mede se o agente encontra todos os assuntos, não só o principal.")],
+        limite: [h("p", {}, `O gabarito foi montado com ajuda de IA e não passou por revisão humana completa. É a principal limitação do método. Também corrigimos um número: uma versão anterior dizia que a etiqueta acertava 59,5%, mas vinha de uma rodada antiga, com outra régua. Com a régua atual, é ${pct(c.acerto_tag_manual, 1)}.`)],
+      })),
+    h("div", { class: "sub-bloco", id: "deduplicacao" },
+      h("h3", {}, `Por que classificamos ${intBR(m.textos_unicos_classificados)} textos, e não ${intBR(m.conversas_com_mensagem_cliente)}`),
+      nums([intBR(m.conversas_com_mensagem_cliente), "conversas com mensagem"], [intBR(m.textos_unicos_classificados), "textos diferentes"],
+        [pct(m.economia_deduplicacao_pct), "menos chamadas à IA"], [intBR(par.tamanho_grupo_lote), "conversas por chamada"]),
+      quad({
+        oque: [h("p", {}, "Muitas mensagens se repetem, mudando só a data, o número do pedido ou um dado pessoal (“Meu pedido GC… de 12/08 não chegou”). Classificar cada repetição seria pagar a IA várias vezes pela mesma resposta.")],
+        como: [h("p", {}, "Para achar repetições, trocamos datas por [DATA], números de pedido por [PEDIDO] e dados pessoais por marcadores. Textos iguais depois disso são classificados uma vez só, em grupos, e o resultado fica salvo em cache. ", h("b", {}, "Toda conversa recebe a sua classificação."))],
+        porque: [h("p", {}, "As cotas gratuitas dos modelos são pequenas. Sem isso, a classificação das 4.000 conversas não caberia no limite diário.")],
+        limite: [h("p", {}, "Duas mensagens iguais exceto pela data recebem a mesma classificação, o que é o desejado. Se a data mudasse o motivo, isso se perderia; nos textos do case, não encontramos esse caso.")],
+      })));
+}
+
+/* =========================== 4 · saúde =========================== */
+function secaoSaude(d) {
+  const s = d.saude, sh = d.metodologia.parametros.sempre_humano;
+  return secao("saude", 4, "Por que existe a categoria Saúde",
+    "A lista de etiquetas do atendimento não tinha uma categoria para saúde. Criamos uma porque é o único assunto em que um erro pode machucar o cliente.",
+    nums([intBR(s.conversas), "conversas de saúde"], [intBR(s.reacao_adversa), "reações adversas"], [intBR(s.duvida_saude), "dúvidas de saúde"],
+      ["0", "etiquetas de Saúde"]),
+    quad({
+      oque: [h("p", {}, `Dois motivos: reação adversa (alergia, irritação após usar o produto) e dúvida de saúde (gestante pode usar? tem alergênico?). A política exige registrar reações no protocolo de cosmetovigilância em até ${s.prazo_politica_horas} horas.`)],
+      como: [lista(
+        ["Casos = conversas em que o agente apontou ", h("code", {}, sh.join(" ou ")), " entre os motivos."],
+        ["Onde foram parar = a etiqueta manual que o atendente escolheu para essas conversas: ",
+          s.tags_manuais.map(x => `${x.tag} ${x.conversas}`).join(", "), "."],
+        [`Primeira resposta = quem escreveu primeiro depois do cliente (bot em ${s.primeira_resposta.bot} de ${s.conversas}).`],
+        [`Tempo até um humano = da primeira mensagem do cliente até a primeira de um atendente, só nas reações adversas: mediana de ${dec(s.reacao_horas_ate_humano_mediana)} h.`])],
+      porque: [h("p", {}, "Sem uma etiqueta, a liderança não consegue contar quantos casos existem nem conferir o prazo de 24 horas. Por isso: todo caso vai para a responsável técnica, fura a fila e chega com o dossiê do protocolo. O agente nunca resolve saúde sozinho.")],
+      limite: [h("p", {}, `O tempo de resposta foi bom (só ${s.reacao_acima_24h} caso passou de 24 h). Não afirmamos que o bot ou o atendimento erraram: o problema é a falta de visibilidade, não um mau atendimento comprovado. E o tempo medido é até a primeira resposta humana, não até o registro do protocolo, que os dados não mostram.`)],
+    }));
+}
+
+/* =========================== 5 · recontato =========================== */
+function secaoRecontato(d) {
+  const p2 = d.p2_contatos_evitaveis, it = Object.fromEntries(p2.itens.map(x => [x.id, x]));
+  const soma = p2.itens.reduce((a, x) => a + x.custo, 0);
+  return secao("recontato", 5, "Recontato e contatos evitáveis",
+    "Contatos que só existem porque algo falhou antes: a resposta, o aviso ou o autoatendimento.",
+    quad({
+      oque: [h("p", {}, `Recontato é o cliente voltando a falar do mesmo assunto: ${intBR(it.recontato.conversas)} conversas, ${brl(it.recontato.custo)} no trimestre.`)],
+      como: [lista(
+        [h("b", {}, "Recontato:"), " a IA marca quando o cliente indica que já falou antes (“de novo aqui”, “já é a terceira vez”, “ninguém me respondeu”)."],
+        [h("b", {}, "Dúvida de rastreio:"), " motivo principal = rastreio."],
+        [h("b", {}, "Abandono no bot:"), " o cliente abriu a conversa e não escreveu nada."],
+        [h("b", {}, "Alteração de endereço:"), " motivo principal = endereço."])],
+      porque: [h("p", {}, `Uma conversa pode cair em mais de um item (um recontato sobre rastreio). Por isso o total evitável (${brl(p2.total_custo)}) é menor que a soma dos itens (${brl(soma)}): cada conversa entra uma vez só.`)],
+      limite: [h("p", {}, "O recontato depende de o cliente dizer que voltou. Quem volta sem dizer não é contado, então o número real tende a ser maior. Na prioridade da fila, também contamos conversa reaberta e contato anterior sobre o mesmo pedido.")],
+    }),
+    h("div", { class: "sub-bloco", id: "extras" },
+      h("h3", {}, "As três perguntas a mais: como medimos"),
+      quadExtras(d)));
+}
+
+function quadExtras(d) {
+  const e = d.extras, hc = e.fora_do_horario.horario_comercial, pior = e.transportadoras.itens[0];
+  return quad({
+    como: [lista(
+      [h("b", {}, "Fora do horário:"), ` hora da primeira mensagem do cliente antes das ${hc.inicio}h ou a partir das ${hc.fim}h (o case diz que fora disso só o bot responde). “Resolveria na hora” = conversas fora do horário que a simulação do trimestre marcou como automáticas.`],
+      [h("b", {}, "Transportadoras:"), " contato de entrega = motivo principal atraso ou dúvida de rastreio, com pedido vinculado. Comparamos a fatia dos pedidos de cada transportadora com a fatia dos contatos de entrega, e a proporção de pedidos com status “atrasado”."],
+      [h("b", {}, "Reclame Aqui com contato anterior:"), " outra conversa do mesmo cliente aberta antes, em qualquer canal; “mesmo pedido” = mesmo número de pedido. O custo herdado soma o preço do Reclame Aqui dessas conversas."])],
+    porque: [h("p", {}, `As três respondem a quem pode agir: o horário mostra o que o agente ganha por atender 24 h; a transportadora (${pior.transportadora}, ${pct(pior.pct_atrasados, 1)} de atraso) dá um número para a negociação logística; e o Reclame Aqui liga o canal mais caro ao recontato.`)],
+    limite: [lista(
+      "Os horários vêm dos registros do case, sem fuso explícito; assumimos o horário local da operação.",
+      "O arquivo de pedidos só tem pedidos de clientes que contataram: por isso fatias, e não “contatos por pedido”.",
+      "“Contato anterior” não distingue o assunto: o cliente pode ter falado antes sobre outra coisa. Por isso mostramos também o recorte “mesmo pedido”.")],
+  });
+}
+
+/* =========================== 6 · prioridade =========================== */
+const FATORES = {
+  gravidade: ["Gravidade", "O motivo mais grave da conversa, mais 30% dos outros motivos."],
+  canal: ["Canal", "Proporcional ao custo do canal: Reclame Aqui no máximo."],
+  sla: ["SLA", "Quanto do prazo de primeira resposta do canal já passou."],
+  recontato: ["Recontato", "O cliente está voltando, a conversa foi reaberta ou já houve contato sobre o pedido."],
+  valor: ["Valor", "Valor do pedido, com teto no percentil 90."],
+  tom: ["Tom", "Irritado ou urgente."],
+};
+function secaoPrioridade(d) {
+  const p = d.metodologia.parametros, pesos = p.pesos_prioridade;
+  const mx = Math.max(...Object.values(pesos));
+  return secao("prioridade", 6, "Como a fila é ordenada",
+    "Cada conversa recebe uma nota de 0 a 100. A fila é atendida da maior para a menor; casos de saúde vêm sempre antes.",
+    h("div", { class: "barras", role: "img", "aria-label": Object.entries(pesos).map(([k, v]) => `${FATORES[k]?.[0] || k}: ${pct(v)}`).join("; ") },
+      ...Object.entries(pesos).map(([k, v]) => h("div", { class: "barra", "data-tip": FATORES[k]?.[1] || k },
+        h("span", {}, FATORES[k]?.[0] || k), barraSimples(v / mx, "--c1"), h("span", { class: "v" }, pct(v))))),
+    quad({
+      como: [lista(
+        "Cada fator vira uma nota de 0 a 100 (passe o mouse nas barras para ver como).",
+        "A nota final é a média ponderada pelos pesos acima.",
+        [`SLA por canal: WhatsApp ${dec(p.sla_horas.whatsapp)} h, e-mail ${dec(p.sla_horas.email)} h, Reclame Aqui ${dec(p.sla_horas.reclame_aqui)} h.`],
+        [`Motivos secundários contam ${pct(p.fator_motivos_secundarios)}; o valor do pedido satura em ${brl(p.valor_teto_prioridade)}.`])],
+      porque: [h("p", {}, "Somar só as gravidades ignoraria o resto: um caso pouco grave no Reclame Aqui, esperando há dois dias, precisa passar na frente de uma dúvida nova no WhatsApp. Fatores de naturezas diferentes (gravidade, horas, reais) só podem ser somados depois de virarem a mesma escala, de 0 a 100. Os pesos dão a última palavra à gravidade.")],
+      limite: [h("p", {}, "Os pesos foram definidos por critério de negócio, não calibrados com dados de resultado (que o case não tem). O SLA conta horas corridas, sem descontar a noite.")],
+    }));
+}
+
+/* =========================== 7 · decisão =========================== */
+function secaoDecisao(d) {
+  const p = d.metodologia.parametros, p4 = d.p4_sozinho_ou_pessoa, h4 = p4.historico;
+  const politicas = h("div", { class: "tabela-wrap", style: "border:1px solid var(--line);border-radius:12px" }, h("table", {},
+    h("thead", {}, h("tr", {}, h("th", {}, "Política"), h("th", {}, "Vale para"), h("th", {}, "Ação"), h("th", { class: "dir" }, "Prazo"), h("th", {}, "Foto"))),
+    h("tbody", {}, ...p.politicas.map(x => h("tr", {},
+      h("td", { "data-tip": x.texto }, h("b", {}, nomePolitica(x.texto))),
+      h("td", {}, x.motivos.map(rotMotivo).join(", ")),
+      h("td", {}, rotAcao(x.acao)),
+      h("td", { class: "dir" }, x.prazo_dias ? `${x.prazo_dias} dias` : "—"),
+      h("td", {}, x.exige_foto ? "sim" : "—"))))));
+  return secao("decisao", 7, "Como o agente decide",
+    "Três camadas, todas regras escritas: confere as políticas, aplica as regras inegociáveis e consulta a tabela de decisão.",
+    h("div", { class: "sub-bloco" },
+      h("h3", {}, "1. Elegibilidade: cada assunto contra a política"),
+      politicas,
+      h("div", { class: "resultados" },
+        h("div", {}, h("span", { class: "pill ok" }, "Elegível"), "A política permite e os dados confirmam."),
+        h("div", {}, h("span", { class: "pill no" }, "Inelegível"), "A política não cobre (ex.: endereço depois da separação)."),
+        h("div", {}, h("span", { class: "pill ind" }, "Falta informação"), "Pode caber, mas falta algo: foto, data de recebimento. O agente pede."),
+        h("div", {}, h("span", { class: "pill sp" }, "Sem política"), "Não há regra escrita para o assunto: vai para uma pessoa.")),
+      h("p", { class: "citacao" }, h("b", {}, "O limite seguro: "), "os pedidos não trazem a data de entrega, e os prazos contam do recebimento. Usamos os dias desde a compra: se a compra cabe no prazo, o recebimento (que veio depois) também cabe. Quando não cabe, o agente não nega; pede a data de recebimento.")),
+    h("div", { class: "sub-bloco" },
+      h("h3", {}, "2. Regras inegociáveis"),
+      h("p", {}, h("span", { class: "pill hum" }, "Saúde"), " vai sempre para a responsável técnica. ",
+        h("span", { class: "pill hum" }, "Reclame Aqui"), " vai sempre para um analista: a resposta é pública e o custo, o maior.")),
+    h("div", { class: "sub-bloco" },
+      h("h3", {}, "3. Tabela de decisão"),
+      lista(
+        ["Cada assunto da conversa recebe uma ação. A conversa só é ", h("b", {}, "automática se todos"), " os assuntos forem."],
+        ["Ações com custo (reembolso, estorno, reenvio, nova produção) só são automáticas se elegíveis e com pedido até ", h("b", {}, brl(p.limite_valor_automatico)), "."],
+        ["Assunto sem regra vai para uma pessoa, na equipe certa (financeiro, logística, comercial…), com as ações dos outros assuntos já sugeridas no dossiê."])),
+    quad({
+      porque: [h("p", {}, "Usar IA para decidir seria trocar uma regra conferível por um palpite. Com tabela, a mesma conversa sempre recebe a mesma decisão, e cada uma pode ser explicada. Tínhamos uma etapa de “auditoria” que revisava a decisão; com regras determinísticas, ela repetiria o mesmo resultado, então virou testes automáticos que conferem a fila inteira (saúde nunca automática, dinheiro só dentro do limite, nenhum assunto esquecido).")],
+      como: [h("p", {}, `“Trimestre inteiro” = o agente percorrendo as ${intBR(h4.conversas)} conversas do case, usando a classificação salva, sem nova chamada à IA: ${intBR(h4.automatico)} automáticas e ${intBR(h4.humano)} para uma pessoa. “Políticas que liberariam automação” = conversas cujo único bloqueio é a falta de uma política para aquele assunto.`)],
+      limite: [h("p", {}, `O limite de ${brl(p.limite_valor_automatico)} é uma proposta nossa, ainda não validada pela empresa. A simulação mostra o que o agente faria, não o que o cliente responderia depois.`)],
+    }));
+}
+
+/* =========================== 8 · resposta =========================== */
+function secaoResposta(d) {
+  const p = d.metodologia.parametros, a = p.redacao_amostra;
+  return secao("resposta", 8, "Como a resposta ao cliente é escrita",
+    "A decisão já está tomada quando a resposta é escrita. A escrita não decide nada.",
+    quad({
+      oque: [h("p", {}, "Um modelo de texto por tipo de ação, com um parágrafo por assunto: quem escreveu sobre duas coisas recebe resposta para as duas. Os textos usam só os dados da decisão (valor, prazo, o que pedir), nunca o texto do cliente.")],
+      como: [h("p", {}, "Opcionalmente, o modelo ", h("code", {}, p.modelo_redacao), " reescreve o texto num tom mais natural. Cinco checagens automáticas recusam a reescrita e devolvem o modelo original se ela: tiver dado pessoal, omitir um assunto, prometer algo não decidido, perder um valor ou prazo, ou ficar longa demais.")],
+      porque: [h("p", {}, a ? `No teste com ${a.testadas} conversas (3 por tipo de ação), ${a.aceitas} reescritas passaram nas checagens.` : "A reescrita foi testada numa amostra com conversas de todos os tipos de ação.",
+        " Mesmo assim, ela fica opcional: o modelo de texto já é correto, e a IA só melhora o tom.")],
+      limite: [h("p", {}, "As checagens buscam palavras-chave, não entendem o sentido. Num caso, a IA escreveu que o cancelamento foi “efetuado” quando só tinha sido “solicitado”, uma nuance que passou. Por isso a reescrita não é o padrão.")],
+    }));
+}
+
+/* =========================== 9 · privacidade =========================== */
+function secaoPrivacidade() {
+  return secao("privacidade", 9, "O que publicamos e o que não",
+    "Os dados do case são confidenciais. O site foi construído para não depender deles.",
+    quad({
+      oque: [lista(
+        "Os arquivos do case (conversas, pedidos, parâmetros) nunca saem da máquina de desenvolvimento nem entram no repositório.",
+        "O Diagnóstico e esta página leem só um arquivo de totais e percentuais.",
+        "“Testar o agente” usa um pedido simulado, preenchido por quem testa.")],
+      como: [h("p", {}, "Antes de gravar o arquivo de números, um teste automático o recusa se encontrar qualquer identificador do case (conversa, cliente, pedido), CPF, cartão, telefone, e-mail ou qualquer sequência de 6 palavras copiada de uma mensagem real.")],
+      porque: [h("p", {}, "Tratar dados sintéticos como reais, como pede o desafio. E anonimizar antes de qualquer envio à IA, inclusive no teste ao vivo.")],
+    }));
+}
+
+/* =========================== 10 · diário =========================== */
+const DIARIO = [
+  ["Sem modelo de embeddings",
+   "A ideia inicial era classificar por similaridade de vetores, mas o provedor gratuito (Groq) não tem modelo de embeddings.",
+   "Classificar com um modelo de linguagem, pedindo resposta num formato fixo e validado.",
+   "Além do motivo, ganhamos a frase que comprova cada um, o tom e o recontato."],
+  ["Cotas gratuitas travaram a classificação",
+   "A Groq limita tokens por minuto e 200 mil por dia por modelo. Classificar conversa por conversa esgotava a cota no meio do trabalho.",
+   "Modo lote: deduplicação dos textos, grupos de conversas por chamada, cache salvo em disco e retomada de onde parou. A classificação passou para o Gemini.",
+   "As 4.000 conversas classificadas, com metade das chamadas."],
+  ["Metade das requisições falhando",
+   "O painel do Gemini mostrava 50% de falhas. Um erro temporário do servidor (503) era tratado como resposta inválida, e o grupo era dividido até sobrar uma conversa por chamada.",
+   "Separar erro temporário de resposta inválida: no primeiro, esperar e tentar de novo; dividir só o grupo que realmente falhou. E espaçar as requisições.",
+   "Falhas eliminadas e muito menos chamadas."],
+  ["O motivo principal era o primeiro citado",
+   "Uma reação alérgica mencionada depois de uma dúvida de rastreio ficava como assunto secundário.",
+   "Motivo principal = o mais grave, com a mesma régua de gravidade da prioridade.",
+   "A classificação e a fila passaram a falar a mesma língua."],
+  ["IA para decidir? E para auditar a decisão?",
+   "O plano inicial tinha IA no “decidir” e uma etapa de auditoria que podia pedir uma nova decisão.",
+   "Decisão por tabela de regras; o que não tem regra vai para uma pessoa. A auditoria perdeu o sentido (repetiria o mesmo resultado) e virou testes automáticos sobre a fila inteira.",
+   "Decisões explicáveis e reprodutíveis, com garantias testadas."],
+  ["A checagem barrava textos corretos",
+   "No primeiro teste da reescrita por IA, 7 de 27 textos foram recusados. O erro era da checagem: ao procurar o valor “R$ 97,69”, ela capturava também o ponto final da frase.",
+   "Comparar só o número, sem a pontuação ao redor, e cobrir o caso com teste.",
+   "27 de 27 reescritas aprovadas, com as mesmas cinco proteções."],
+  ["Parágrafo repetido na resposta",
+   "Atraso e dúvida de rastreio na mesma conversa geravam a mesma ação, e o texto saía com o mesmo parágrafo duas vezes.",
+   "Remover parágrafos idênticos ao montar a resposta.",
+   "Resposta limpa, com teste para não voltar."],
+  ["Números que não se reproduziam",
+   "Alguns números das primeiras versões (acerto da etiqueta, políticas faltantes) tinham sido calculados à mão e não saíam de nenhuma regra exata.",
+   "Um script gera todos os números publicados a partir dos dados e confere, a cada execução, se algum mudou. Definições corrigidas e registradas.",
+   "Todo número da página tem uma regra e pode ser recalculado."],
+  ["Duas escalas misturadas",
+   "As conversas estavam na escala da amostra e os custos na da operação. Lido sem aviso, “4.000 conversas custaram R$ 108 mil” não fecha com nenhum preço de canal.",
+   "Fator de expansão explícito e as duas escalas lado a lado.",
+   "O leitor sabe sempre qual escala está vendo."],
+  ["O site não subia",
+   "O pacote passava do limite de 250 MB da Vercel por causa de bibliotecas de análise que o site não usa. Depois, a chave da IA mal configurada aparecia só como “KeyError”.",
+   "Separar as dependências do site das de análise e transformar erros de configuração em mensagens claras e registros nos logs.",
+   "Site no ar com 132 MB, e problemas de configuração diagnosticados em minutos."],
+];
+function secaoDiario() {
+  return secao("diario", 10, "Problemas no caminho e como resolvemos",
+    "Nem tudo saiu certo de primeira. Estes são os principais tropeços, em ordem, e o que cada um ensinou.",
+    h("div", { class: "diario" }, ...DIARIO.map(([tit, prob, decisao, res], i) => h("div", { class: "ep" },
+      h("div", { class: "trilho" }, h("span", { class: "bola" }, i + 1), i < DIARIO.length - 1 ? h("span", { class: "fio" }) : null),
+      h("div", { class: "corpo" }, h("span", { class: "tit" }, tit),
+        h("div", { class: "tres" },
+          h("div", { class: "p" }, h("b", {}, "Problema"), prob),
+          h("div", { class: "d" }, h("b", {}, "Decisão"), decisao),
+          h("div", { class: "r" }, h("b", {}, "Resultado"), res)))))));
+}
+
+/* =========================== 11 · limitações =========================== */
+function secaoLimitacoes(d) {
+  const c = d.classificacao, p = d.metodologia.parametros;
+  return secao("limitacoes", 11, "Limitações e próximos passos",
+    "O que o método não garante, e o que faríamos com mais tempo.",
+    h("div", { class: "quad" },
+      h("div", { class: "q limite" }, h("b", { class: "t" }, "O que o método não garante"), lista(
+        `Gabarito de ${c.amostra_gabarito} conversas montado com ajuda de IA, sem revisão humana completa.`,
+        "Sem data de entrega: prazos contados da compra (limite seguro).",
+        "Custo médio por canal, igual para conversas curtas e longas; sem custo da conversa resolvida pelo agente.",
+        "SLA em horas corridas, sem horário comercial.",
+        "Pesos da prioridade definidos por critério de negócio, não calibrados com dados.",
+        `Limite de ${brl(p.limite_valor_automatico)} para ação automática com custo: proposta, não validada pela empresa.`,
+        "Recontato só é contado quando o cliente diz que voltou.")),
+      h("div", { class: "q porque" }, h("b", { class: "t" }, "Com mais tempo"), lista(
+        "Revisar o gabarito com a equipe de atendimento e ampliar a amostra.",
+        "Calibrar os pesos da prioridade com o histórico de resolução e satisfação.",
+        "Considerar o horário comercial no SLA.",
+        "Comparar a classificação por IA com uma abordagem por embeddings, como linha de base.",
+        "Escrever as políticas que faltam (brinde, troca geral, cupom) e medir o ganho de automação."))
+    ));
+}
+
+async function iniciar() {
+  iniciarTema();
+  iniciarTooltip();
+  try {
+    const r = await fetch("diagnostico.json");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    carregarRotulos(d);
+    const secoes = [secaoFluxo(), secaoAmostra(d), secaoClassificacao(d), secaoSaude(d), secaoRecontato(d),
+                    secaoPrioridade(d), secaoDecisao(d), secaoResposta(d), secaoPrivacidade(), secaoDiario(), secaoLimitacoes(d)];
+    $("conteudo").replaceChildren(...secoes);
+    $("sumario").replaceChildren(...SECOES.map(x => h("a", { href: "#" + x.id }, h("small", {}, x.num), x.titulo)));
+    $("rodape").replaceChildren(
+      h("p", {}, "Os números desta página vêm do mesmo arquivo do Diagnóstico, gerado por script a partir dos dados; os parâmetros são lidos do código do agente."),
+      h("p", {}, h("a", { href: "diagnostico.html" }, "← Voltar ao Diagnóstico"), " · ", h("a", { href: "index.html" }, "Testar o agente →"), " · ",
+        h("a", { href: "https://github.com/caiolucasprogramador/desafio-gogroup", target: "_blank", rel: "noopener noreferrer" }, "Código no GitHub ↗")));
+    // conteúdo é montado depois do carregamento: reposiciona na âncora pedida (ex.: vindo de "Como medimos →")
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  } catch (e) {
+    $("conteudo").replaceChildren(h("div", { class: "erro" }, "Não foi possível carregar a metodologia: " + e.message));
+  }
+}
+iniciar();
+</script>
+</body>
+</html>

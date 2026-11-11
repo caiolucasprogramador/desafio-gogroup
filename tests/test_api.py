@@ -98,6 +98,7 @@ def test_exemplos_e_pagina(cliente):
 def test_serve_arquivos_publicos(cliente):
     """Localmente o FastAPI serve public/ como a Vercel: páginas e o JSON do diagnóstico."""
     assert cliente.get("/diagnostico.json").json()["totais"]["conversas"] > 0
+    assert "Metodologia" in cliente.get("/metodologia.html").text
     assert cliente.get("/api/opcoes").status_code == 200  # rotas da API continuam tendo precedência
     assert cliente.get("/nao-existe.html").status_code == 404
 
