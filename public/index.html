@@ -9,37 +9,44 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
-  --bg: #f6f4f8; --surface: #ffffff; --surface-2: #f0edf4; --line: #e2dde9;
-  --fg: #1d1823; --muted: #6b6475; --faint: #9a93a5;
-  --accent: #6d3fc0; --accent-soft: #ece4fa; --accent-fg: #ffffff;
+  --bg: #f5f6f8; --surface: #ffffff; --surface-2: #eef1f5; --line: #dee3ea;
+  --fg: #161a22; --muted: #5f6573; --faint: #8e95a2;
+  --accent: #0062b1; --accent-soft: #ddebf8; --accent-fg: #ffffff;
   --auto: #1f7a55; --auto-soft: #def3e9;
   --human: #b4561b; --human-soft: #fbe9dc;
   --warn: #8a6a00; --warn-soft: #f8f0cf;
   --bad: #b3263a; --bad-soft: #fbe2e6;
-  --f1: #6d3fc0; --f2: #2f7fb5; --f3: #1f9a8a; --f4: #c9821b; --f5: #b84a7a; --f6: #7d8590;
-  --shadow: 0 1px 2px rgba(40, 20, 70, .06), 0 4px 16px rgba(40, 20, 70, .05);
+  --f1: #0062b1; --f2: #e05aae; --f3: #e0583a; --f4: #1e9e9e; --f5: #a8961a; --f6: #7d8590;
+  --shadow: 0 1px 2px rgba(10, 30, 60, .06), 0 4px 16px rgba(10, 30, 60, .05);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
-    --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
-    --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+    --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+    --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+    --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
     --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
     --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
-    --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+    --f1: #3a86cf; --f2: #cf4399; --f3: #d9663f; --f4: #2aa8a8; --f5: #c7ae3a; --f6: #9aa2ad;
     --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141118; --surface: #1d1922; --surface-2: #26212d; --line: #342d3d;
-  --fg: #ece8f1; --muted: #a59fb0; --faint: #766f82;
-  --accent: #a882ee; --accent-soft: #2e2442; --accent-fg: #17121d;
+  --bg: #10141a; --surface: #181d24; --surface-2: #212731; --line: #2e3541;
+  --fg: #e9edf2; --muted: #9da5b2; --faint: #6e7684;
+  --accent: #6fb1ec; --accent-soft: #13304d; --accent-fg: #0b1a29;
   --auto: #5fcf9c; --auto-soft: #18342a; --human: #f0a067; --human-soft: #3a261a;
   --warn: #e3c35a; --warn-soft: #352e15; --bad: #f07a8b; --bad-soft: #3a1c22;
-  --f1: #a882ee; --f2: #6cb4e6; --f3: #4fcab8; --f4: #e8ad55; --f5: #e080ab; --f6: #9aa2ad;
+  --f1: #3a86cf; --f2: #cf4399; --f3: #d9663f; --f4: #2aa8a8; --f5: #c7ae3a; --f6: #9aa2ad;
   --shadow: none; color-scheme: dark;
 }
+/* Faixa com as cores da identidade Gocase (só as cores; nenhuma marca, logo ou forma) */
+:root { --g-azul: #0062b1; --g-magenta: #ee3fac; --g-coral: #ff6e50; --g-turquesa: #78d8d8; --g-amarelo: #eeee96; --g-rosa: #ffd1dc; }
+body::before { content: ""; display: block; height: 6px;
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  background: linear-gradient(90deg, var(--g-azul) 0 16.66%, var(--g-magenta) 0 33.33%, var(--g-coral) 0 50%,
+                                     var(--g-turquesa) 0 66.66%, var(--g-amarelo) 0 83.33%, var(--g-rosa) 0); }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; overflow-x: hidden; }
 body {
@@ -260,6 +267,7 @@ footer a:hover { text-decoration: underline; }
     <div class="nav-tabs">
       <a class="nav-tab" href="diagnostico.html">Diagnóstico</a>
       <a class="nav-tab ativo" href="index.html" aria-current="page">Testar o agente</a>
+      <a class="nav-tab" href="metodologia.html">Metodologia</a>
     </div>
     <div class="acoes-topo">
       <a class="btn-topo" href="https://github.com/caiolucasprogramador/desafio-gogroup" target="_blank" rel="noopener noreferrer">Repositório GitHub ↗</a>
